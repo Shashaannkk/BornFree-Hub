@@ -1,7 +1,9 @@
 /**
- * BONFREE-HUB Contact & Customer Auth Pages Controller (Phase 1B)
+ * BONFREE-HUB Contact & Customer Auth Pages Controller (Phase 4 Connected)
  */
 import { clearElement, qs, qsa } from '../core/dom.js';
+import { isSupabaseConfigured } from '../core/config.js';
+import { supabaseAuth } from '../core/supabaseClient.js';
 import { createAlert, showToast } from '../components/toast.js';
 import { clearFieldErrors, setButtonLoading, setFieldError, validateForm } from '../components/form.js';
 import { openPolicyModal } from '../components/footer.js';
@@ -52,24 +54,32 @@ function bindLivePasswordRules(inputEl, rulesContainer) {
   update();
 }
 
-function handleServiceResult(result, statusRegion) {
+function handleServiceError(result, statusRegion) {
   if (result.ok) return;
 
-  const isNotConfigured =
+  const isPendingConfig =
     result.code === 'SUPABASE_NOT_CONFIGURED' ||
     result.code === 'AUTH_CLIENT_PENDING' ||
     result.code === 'SERVICE_PENDING';
 
+  const variant = isPendingConfig ? 'warning' : 'danger';
+  const title = isPendingConfig
+    ? 'Supabase Connection Pending'
+    : result.code === 'DUPLICATE_ACCOUNT'
+    ? 'Email Already Registered'
+    : result.code === 'EMAIL_NOT_CONFIRMED'
+    ? 'Email Verification Required'
+    : result.code === 'SESSION_EXPIRED'
+    ? 'Session Expired'
+    : 'Unable to Proceed';
+
   showFormBanner(statusRegion, {
-    title: isNotConfigured ? 'Backend Connection Pending (Phase 2)' : 'Unable to Proceed',
+    title,
     message: result.message,
-    variant: isNotConfigured ? 'warning' : 'danger',
+    variant,
   });
 
-  showToast({
-    message: result.message,
-    variant: isNotConfigured ? 'warning' : 'danger',
-  });
+  showToast({ message: result.message, variant });
 }
 
 function initContactPage() {
@@ -100,7 +110,18 @@ function initContactPage() {
         subject: values.subject,
         message: values.message,
       });
-      handleServiceResult(result, statusRegion);
+
+      if (result.ok) {
+        form.reset();
+        showFormBanner(statusRegion, {
+          title: 'Message Sent',
+          message: 'Thank you for contacting BONFREE-HUB. Our support team will reply shortly.',
+          variant: 'success',
+        });
+        showToast({ message: 'Contact inquiry submitted.', variant: 'success' });
+      } else {
+        handleServiceError(result, statusRegion);
+      }
     } finally {
       setButtonLoading(submitBtn, false);
     }
@@ -111,6 +132,36 @@ function initLoginPage() {
   const form = qs('#login-form');
   if (!form) return;
   const statusRegion = qs('#form-status-region');
+
+  // Consume redirect verification hash if Supabase redirected to login.html
+  supabaseAuth.consumeAuthRedirectFromUrl();
+
+  const reason = new URLSearchParams(window.location.search).get('reason');
+  if (reason === 'verified') {
+    showFormBanner(statusRegion, {
+      title: 'Email Verified',
+      message: 'Your email has been verified. Sign in below to access your digital loyalty card.',
+      variant: 'success',
+    });
+  } else if (reason === 'session_expired') {
+    showFormBanner(statusRegion, {
+      title: 'Session Expired',
+      message: 'Your session expired for security. Please sign in again.',
+      variant: 'warning',
+    });
+  } else if (reason === 'auth_required') {
+    showFormBanner(statusRegion, {
+      title: 'Sign In Required',
+      message: 'Please sign in to access your BONFREE-HUB customer dashboard.',
+      variant: 'info',
+    });
+  } else if (reason === 'reset_success') {
+    showFormBanner(statusRegion, {
+      title: 'Password Updated',
+      message: 'Your password was reset successfully. Sign in with your new password.',
+      variant: 'success',
+    });
+  }
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -133,7 +184,13 @@ function initLoginPage() {
         email: values.email,
         password: values.password,
       });
-      handleServiceResult(result, statusRegion);
+
+      if (result.ok) {
+        showToast({ message: 'Signed in successfully.', variant: 'success' });
+        window.location.href = 'customer-dashboard.html';
+      } else {
+        handleServiceError(result, statusRegion);
+      }
     } finally {
       setButtonLoading(submitBtn, false);
     }
@@ -144,6 +201,7 @@ function initRegisterPage() {
   const form = qs('#register-form');
   if (!form) return;
   const statusRegion = qs('#form-status-region');
+  const emailInput = qs('#reg-email');
   const passwordInput = qs('#reg-password');
   const confirmInput = qs('#reg-confirm-password');
   const mobileInput = qs('#reg-mobile');
@@ -210,7 +268,26 @@ function initRegisterPage() {
         password: values.password,
         acceptedTerms: termsCheckbox.checked,
       });
-      handleServiceResult(result, statusRegion);
+
+      if (result.ok) {
+        if (result.requiresEmailVerification) {
+          form.reset();
+          showFormBanner(statusRegion, {
+            title: 'Verify Your Email Address',
+            message: result.message,
+            variant: 'success',
+          });
+          showToast({ message: 'Verification email sent.', variant: 'success' });
+        } else {
+          showToast({ message: 'Membership created!', variant: 'success' });
+          window.location.href = 'customer-dashboard.html';
+        }
+      } else {
+        if (result.code === 'DUPLICATE_ACCOUNT' && emailInput) {
+          setFieldError(emailInput.closest('.field'), 'This email is already registered.');
+        }
+        handleServiceError(result, statusRegion);
+      }
     } finally {
       setButtonLoading(submitBtn, false);
     }
@@ -240,7 +317,17 @@ function initForgotPasswordPage() {
 
     try {
       const result = await requestPasswordReset({ email: values.email });
-      handleServiceResult(result, statusRegion);
+      if (result.ok) {
+        form.reset();
+        showFormBanner(statusRegion, {
+          title: 'Reset Link Sent',
+          message: result.message,
+          variant: 'success',
+        });
+        showToast({ message: 'Password recovery email sent.', variant: 'success' });
+      } else {
+        handleServiceError(result, statusRegion);
+      }
     } finally {
       setButtonLoading(submitBtn, false);
     }
@@ -256,6 +343,15 @@ function initResetPasswordPage() {
   const rulesContainer = qs('#reset-password-rules');
 
   bindLivePasswordRules(newPasswordInput, rulesContainer);
+
+  const redirectToken = supabaseAuth.consumeAuthRedirectFromUrl();
+  if (isSupabaseConfigured() && !redirectToken.found && !supabaseAuth.getSession()) {
+    showFormBanner(statusRegion, {
+      title: 'Recovery Link Required',
+      message: 'Open the password reset link sent to your email, or request a new reset link.',
+      variant: 'warning',
+    });
+  }
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -295,7 +391,12 @@ function initResetPasswordPage() {
 
     try {
       const result = await updateCustomerPassword({ newPassword: values.newPassword });
-      handleServiceResult(result, statusRegion);
+      if (result.ok) {
+        await supabaseAuth.signOut();
+        window.location.href = 'login.html?reason=reset_success';
+      } else {
+        handleServiceError(result, statusRegion);
+      }
     } finally {
       setButtonLoading(submitBtn, false);
     }

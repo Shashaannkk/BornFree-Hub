@@ -1,50 +1,87 @@
 /* ==========================================================================
    BONFREE-HUB Design System Tokens
-   Monochrome Editorial Luxury + Modern Gen Z Streetwear
+   Brand Identity: Brand Red + Teal Blue + Muted Gold on Editorial Off White
    ========================================================================== */
 
 :root {
-  /* Core Palette */
-  --color-black: #101010;
-  --color-white: #ffffff;
-  --color-ivory: #f5f4f0;
-  --color-grey-light: #d9d9d9;
+  /* Official Brand Palette */
+  --color-brand-primary: #b51f20;         /* Brand Red — primary CTAs, active nav, stamps */
+  --color-brand-primary-hover: #961819;   /* Accessible deep red hover */
+  --color-brand-primary-soft: #fdf2f2;    /* Subtle red highlight tint */
 
-  /* Derived Monochrome Scale */
-  --color-charcoal: #1c1c1c;
-  --color-graphite: #2b2b2b;
-  --color-text-primary: #101010;
-  --color-text-secondary: #4a4a4a;
-  --color-text-muted: #6e6e6e;
-  --color-text-inverse: #ffffff;
-  --color-text-inverse-muted: #b8b8b8;
+  --color-brand-secondary: #1c637d;       /* Teal Blue — secondary actions & selected states */
+  --color-brand-secondary-hover: #154e63; /* Accessible deep teal hover */
+  --color-brand-secondary-soft: #eef6f8;  /* Subtle teal selected tint */
+
+  --color-brand-accent: #b58a49;          /* Muted Gold — rewards, membership cards, perks */
+  --color-brand-accent-text: #7a5822;     /* Accessible muted gold text on light surfaces */
+  --color-brand-accent-soft: #fbf6ed;     /* Soft champagne reward callout tint */
+
+  --color-bg-offwhite: #faf9f6;           /* Off White — canvas background */
+  --color-surface-white: #ffffff;         /* White — elevated surfaces & cards */
+  --color-charcoal: #171717;              /* Charcoal Black — primary text & dark cards */
+  --color-grey: #71717a;                  /* Grey — secondary text & metadata */
+  --color-grey-border: #e4e4e7;           /* Light Grey — structural hairlines & borders */
+
+  /* Neutral Scale & Semantic Aliases */
+  --color-black: var(--color-charcoal);
+  --color-white: var(--color-surface-white);
+  --color-ivory: var(--color-bg-offwhite);
+  --color-grey-light: var(--color-grey-border);
+  --color-graphite: #27272a;
+
+  /* Text Hierarchy */
+  --color-text-primary: var(--color-charcoal);
+  --color-text-secondary: var(--color-grey);
+  --color-text-muted: var(--color-grey);
+  --color-text-inverse: var(--color-surface-white);
+  --color-text-inverse-muted: #d4d4d8;
+  --color-text-inverse-subtle: #a1a1aa;
 
   /* Surfaces & Borders */
-  --surface-page: #ffffff;
-  --surface-subtle: #f5f4f0;
-  --surface-elevated: #ffffff;
-  --surface-dark: #101010;
-  --surface-dark-elevated: #1c1c1c;
-  --border-subtle: #e5e4df;
-  --border-default: #d9d9d9;
-  --border-strong: #101010;
+  --surface-page: var(--color-bg-offwhite);
+  --surface-subtle: var(--color-bg-offwhite);
+  --surface-elevated: var(--color-surface-white);
+  --surface-dark: var(--color-charcoal);
+  --surface-dark-elevated: #232326;
+  --surface-row-hover: #f4f4f5;
+  --surface-skeleton: #eceae4;
+  --surface-media-placeholder: #eceae4;
+  --border-subtle: #ededf0;
+  --border-default: var(--color-grey-border);
+  --border-strong: var(--color-charcoal);
+  --border-circle-idle: #c4c4ca;
 
-  /* Semantic Status (Restrained Monochrome-Compatible) */
+  /* Translucent Overlays & Image Scrims */
+  --overlay-backdrop: rgba(23, 23, 23, 0.56);
+  --overlay-drawer-backdrop: rgba(23, 23, 23, 0.5);
+  --overlay-loading: rgba(255, 255, 255, 0.8);
+  --scrim-dark-start: rgba(23, 23, 23, 0.86);
+  --scrim-dark-mid: rgba(23, 23, 23, 0.58);
+  --scrim-dark-end: rgba(23, 23, 23, 0.28);
+  --fade-offwhite-end: rgba(250, 249, 246, 0);
+  --fade-white-end: rgba(255, 255, 255, 0);
+  --overlay-inverse-watermark: rgba(255, 255, 255, 0.2);
+  --overlay-inverse-rule: rgba(255, 255, 255, 0.35);
+  --overlay-inverse-dashed: rgba(255, 255, 255, 0.72);
+  --overlay-inverse-copy: rgba(255, 255, 255, 0.88);
+
+  /* Semantic Status (Aligned with Brand Palette & High Contrast) */
   --status-success-bg: #eef5f0;
   --status-success-border: #c7decb;
   --status-success-text: #1b4d2a;
 
-  --status-warning-bg: #f8f4e8;
-  --status-warning-border: #e4d7b4;
-  --status-warning-text: #5c4610;
+  --status-warning-bg: var(--color-brand-accent-soft);
+  --status-warning-border: #e5d2b0;
+  --status-warning-text: var(--color-brand-accent-text);
 
-  --status-danger-bg: #faeeee;
-  --status-danger-border: #e5c6c6;
-  --status-danger-text: #7a1f1f;
+  --status-danger-bg: var(--color-brand-primary-soft);
+  --status-danger-border: #f0c2c2;
+  --status-danger-text: var(--color-brand-primary);
 
-  --status-info-bg: #f5f4f0;
-  --status-info-border: #d9d9d9;
-  --status-info-text: #101010;
+  --status-info-bg: var(--color-brand-secondary-soft);
+  --status-info-border: #c1dbe3;
+  --status-info-text: var(--color-brand-secondary-hover);
 
   /* Typography */
   --font-heading: 'Playfair Display', Georgia, 'Times New Roman', serif;
@@ -93,10 +130,10 @@
   --radius-pill: 9999px;
 
   /* Shadows (Minimal, editorial) */
-  --shadow-xs: 0 1px 2px rgba(16, 16, 16, 0.04);
-  --shadow-sm: 0 4px 12px rgba(16, 16, 16, 0.06);
-  --shadow-md: 0 12px 30px rgba(16, 16, 16, 0.1);
-  --shadow-lg: 0 20px 48px rgba(16, 16, 16, 0.16);
+  --shadow-xs: 0 1px 2px rgba(23, 23, 23, 0.04);
+  --shadow-sm: 0 4px 12px rgba(23, 23, 23, 0.06);
+  --shadow-md: 0 12px 30px rgba(23, 23, 23, 0.1);
+  --shadow-lg: 0 20px 48px rgba(23, 23, 23, 0.16);
 
   /* Layout Dimensions */
   --container-max: 1280px;

@@ -112,10 +112,13 @@ test('Phase 1, 1A & 1B required files and image assets exist', () => {
 
 test('Design system tokens enforce approved palette and fonts', () => {
   const tokens = read('src/styles/tokens.css');
-  assert.match(tokens, /--color-black:\s*#101010/i);
-  assert.match(tokens, /--color-white:\s*#ffffff/i);
-  assert.match(tokens, /--color-ivory:\s*#f5f4f0/i);
-  assert.match(tokens, /--color-grey-light:\s*#d9d9d9/i);
+  assert.match(tokens, /--color-brand-primary:\s*#b51f20/i);
+  assert.match(tokens, /--color-brand-secondary:\s*#1c637d/i);
+  assert.match(tokens, /--color-brand-accent:\s*#b58a49/i);
+  assert.match(tokens, /--color-bg-offwhite:\s*#faf9f6/i);
+  assert.match(tokens, /--color-charcoal:\s*#171717/i);
+  assert.match(tokens, /--color-grey:\s*#71717a/i);
+  assert.match(tokens, /--color-grey-border:\s*#e4e4e7/i);
   assert.match(tokens, /Playfair Display/);
   assert.match(tokens, /Inter/);
 });
@@ -430,7 +433,7 @@ test('Phase 2C & 2D Business Management, Analytics, Reports, Settings & CSV safe
   assert.match(surveyPage, /data-survey-star="5"/);
 });
 
-test('Frontend audit: viewport meta, img alt text, and local href/src integrity across all 26 HTML pages', () => {
+test('Frontend audit: viewport meta, img alt text, and local href/src integrity across all 29 HTML pages', () => {
   const htmlFiles = [
     ...fs.readdirSync(ROOT).filter((f) => f.endsWith('.html')),
     ...fs
@@ -439,7 +442,7 @@ test('Frontend audit: viewport meta, img alt text, and local href/src integrity 
       .map((f) => `admin/${f}`),
   ];
 
-  assert.equal(htmlFiles.length, 26);
+  assert.equal(htmlFiles.length, 29);
 
   for (const rel of htmlFiles) {
     const html = read(rel);

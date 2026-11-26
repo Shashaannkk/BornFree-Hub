@@ -3,6 +3,7 @@
  * Initializes shared navigation, footer, icons, forms, public pages, and design-system showcase.
  */
 import { getPublicConfig } from './core/config.js';
+import { installGlobalErrorMonitoring } from './core/logger.js';
 import { hydrateIcons } from './core/icons.js';
 import { el, qs } from './core/dom.js';
 import { createStore } from './core/state.js';
@@ -208,6 +209,7 @@ function initDesignSystemShowcase() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  installGlobalErrorMonitoring();
   const cfg = getPublicConfig();
   const activePage = document.body.dataset.page || 'home';
 

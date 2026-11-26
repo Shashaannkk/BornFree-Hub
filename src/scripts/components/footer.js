@@ -54,7 +54,7 @@ export function mountPublicFooter(footerEl) {
       el(
         'a',
         {
-          href: 'mailto:support@bonfree-hub.com',
+          href: 'mailto:care@bonfree-hub.in',
           className: 'btn btn--outline-muted btn--icon btn--sm',
           'aria-label': 'Email BONFREE-HUB Support',
         },
@@ -77,21 +77,9 @@ export function mountPublicFooter(footerEl) {
   const legalCol = el('div', {}, [
     el('h3', { className: 'public-footer__heading', text: 'Member Policies' }),
     el('ul', { className: 'public-footer__links' }, [
-      el('li', {}, [
-        el('button', {
-          type: 'button',
-          text: 'Privacy Policy',
-          onClick: () => openPolicyModal('privacy'),
-        }),
-      ]),
-      el('li', {}, [
-        el('button', {
-          type: 'button',
-          text: 'Terms & Conditions',
-          onClick: () => openPolicyModal('terms'),
-        }),
-      ]),
-      el('li', {}, [el('a', { href: 'design-system.html', text: 'UI Design System' })]),
+      el('li', {}, [el('a', { href: 'privacy.html', text: 'Privacy Policy' })]),
+      el('li', {}, [el('a', { href: 'terms.html', text: 'Terms & Conditions' })]),
+      el('li', {}, [el('a', { href: 'survey.html', text: 'Member Feedback' })]),
     ]),
   ]);
 
@@ -108,7 +96,7 @@ export function mountPublicFooter(footerEl) {
       ]),
       el('li', { className: 'cluster' }, [
         createIcon('mail', { size: 14 }),
-        el('a', { href: 'mailto:support@bonfree-hub.com', text: 'support@bonfree-hub.com' }),
+        el('a', { href: 'mailto:care@bonfree-hub.in', text: 'care@bonfree-hub.in' }),
       ]),
     ]),
   ]);

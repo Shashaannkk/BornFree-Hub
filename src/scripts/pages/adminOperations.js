@@ -11,12 +11,18 @@ import { createAlert, showToast } from '../components/toast.js';
 import { createStatusBadge, renderDataTable } from '../components/table.js';
 import { setButtonLoading, validateForm } from '../components/form.js';
 import {
-  ADMIN_DEV_FIXTURE,
   awardStampsForPurchase,
   calculateEligibleStamps,
+  createIdempotencyKey,
+  fetchAdminRedemptions,
+  fetchAdminRewards,
+  fetchStampTransactions,
   lookupCustomerForScanner,
+  lookupMemberLive,
   processRedemption,
   saveRewardDefinition,
+  toggleRewardStatus,
+  verifyVoucherCode,
 } from '../services/adminService.js';
 
 /* --------------------------------------------------------------------------
@@ -45,9 +51,16 @@ export function initAdminScannerPage() {
   const store = createStore({
     scanning: false,
     selected: lookupCustomerForScanner('BF-001248'),
+    pendingIdempotencyKey: '',
+    lastScanPayload: '',
+    lastScanAt: 0,
   });
 
   let qrInstance = null;
+
+  function resetIdempotency() {
+    store.setState({ pendingIdempotencyKey: '' });
+  }
 
   function setCameraAlert(variant, title, message) {
     clearElement(cameraAlertHost);
@@ -159,15 +172,25 @@ export function initAdminScannerPage() {
       await qrInstance.start(
         { facingMode: 'environment' },
         { fps: 10, qrbox: { width: 180, height: 180 } },
-        (decodedText) => {
-          const found = lookupCustomerForScanner(decodedText);
-          if (found) {
-            store.setState({ selected: found });
+        async (decodedText) => {
+          const now = Date.now();
+          const { lastScanPayload, lastScanAt } = store.getState();
+          if (decodedText === lastScanPayload && now - lastScanAt < 2500) {
+            return; // Debounce repeated identical QR frame reads
+          }
+          store.setState({ lastScanPayload: decodedText, lastScanAt: now });
+
+          const found = await lookupMemberLive(decodedText);
+          if (found.ok) {
+            store.setState({
+              selected: { customer: found.customer, programme: found.programme },
+              pendingIdempotencyKey: '',
+            });
             renderSelectedCustomer();
             showToast({ message: `QR matched member ${found.customer.name} (${found.customer.id}).`, variant: 'success' });
             stopScanner();
           } else {
-            setCameraAlert('warning', 'Unknown QR Code', `Scanned payload "${decodedText}" did not match an active member.`);
+            setCameraAlert('warning', 'Invalid QR Identifier', found.message);
           }
         },
         () => {
@@ -189,33 +212,140 @@ export function initAdminScannerPage() {
 
   startBtn?.addEventListener('click', startScanner);
   stopBtn?.addEventListener('click', stopScanner);
+  window.addEventListener('pagehide', () => {
+    void stopScanner();
+  });
+  window.addEventListener('beforeunload', () => {
+    void stopScanner();
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      void stopScanner();
+    }
+  });
 
-  lookupForm?.addEventListener('submit', (event) => {
+  lookupForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const q = lookupInput?.value || '';
-    const found = lookupCustomerForScanner(q);
-    if (!found) {
+    const found = await lookupMemberLive(q);
+    if (!found.ok) {
       store.setState({ selected: null });
       renderSelectedCustomer();
-      showToast({ message: 'No customer matched that ID, email, or phone.', variant: 'warning' });
+      showToast({ message: found.message, variant: 'warning' });
       return;
     }
-    store.setState({ selected: found });
+    store.setState({ selected: { customer: found.customer, programme: found.programme } });
     renderSelectedCustomer();
   });
 
-  devPresetSelect?.addEventListener('change', (e) => {
+  devPresetSelect?.addEventListener('change', async (e) => {
     const val = e.target.value;
     if (!val) return;
-    const found = lookupCustomerForScanner(val);
-    if (found) {
-      store.setState({ selected: found });
+    const found = await lookupMemberLive(val);
+    if (!found.ok) {
+      store.setState({ selected: null });
       renderSelectedCustomer();
-      showToast({ message: `Simulated QR scan for ${found.customer.id}`, variant: 'info', durationMs: 2200 });
+      setCameraAlert('warning', 'Invalid QR Identifier', found.message);
+      showToast({ message: found.message, variant: 'warning' });
+      return;
     }
+    clearElement(cameraAlertHost);
+    store.setState({ selected: { customer: found.customer, programme: found.programme } });
+    renderSelectedCustomer();
+    showToast({ message: `Simulated QR scan for ${found.customer.id}`, variant: 'info', durationMs: 2200 });
   });
 
-  purchaseAmtInput?.addEventListener('input', updateStampPreview);
+  purchaseRefInput?.addEventListener('input', resetIdempotency);
+  purchaseAmtInput?.addEventListener('input', () => {
+    resetIdempotency();
+    updateStampPreview();
+  });
+
+  async function executeStampSubmission(values, estimatedStamps, triggerBtn) {
+    const { selected, pendingIdempotencyKey } = store.getState();
+    const idemKey =
+      pendingIdempotencyKey || createIdempotencyKey(selected.customer.id, values.purchaseRef);
+    store.setState({ pendingIdempotencyKey: idemKey });
+
+    setButtonLoading(triggerBtn, true, 'Submitting...');
+    const res = await awardStampsForPurchase({
+      customerId: selected.customer.id,
+      customerUuid: selected.customer.uuid || null,
+      qrToken: selected.customer.qrToken || null,
+      programmeId: selected.programme.id || null,
+      purchaseRef: values.purchaseRef,
+      amountInr: Number(values.purchaseAmount),
+      idempotencyKey: idemKey,
+      calculatedStamps: estimatedStamps,
+      programme: selected.programme,
+    });
+    setButtonLoading(triggerBtn, false);
+    closeModal();
+    clearElement(awardStatusHost);
+
+    if (res.ok) {
+      const serverStamps = res.result?.stamps_awarded ?? estimatedStamps;
+      const serverBalance = res.result?.new_balance ?? selected.customer.stamps;
+      const txCode = res.result?.transaction_code || 'CONFIRMED';
+      selected.customer.stamps = serverBalance;
+      store.setState({ pendingIdempotencyKey: '' });
+      renderSelectedCustomer();
+      awardForm.reset();
+      updateStampPreview();
+
+      const msg = res.idempotentReplay
+        ? `Idempotent replay confirmed (${txCode}): +${serverStamps} stamps already recorded. Current balance: ${serverBalance}.`
+        : `Confirmed (${txCode}): Awarded +${serverStamps} stamps. Updated balance: ${serverBalance}.`;
+      awardStatusHost.appendChild(
+        createAlert({ variant: 'success', title: 'Stamps Awarded (Server Confirmed)', message: msg }),
+      );
+      showToast({ message: msg, variant: 'success' });
+      return;
+    }
+
+    if (res.code === 'NETWORK_ERROR') {
+      const retryBtn = el('button', {
+        type: 'button',
+        className: 'btn btn--primary btn--sm',
+        text: 'Retry Safely (Idempotent)',
+        onClick: () => executeStampSubmission(values, estimatedStamps, retryBtn),
+      });
+      awardStatusHost.append(
+        createAlert({
+          variant: 'warning',
+          title: 'Network Interrupted',
+          message: `${res.message} Retrying preserves idempotency key ${idemKey} so duplicate stamps cannot occur.`,
+        }),
+        el('div', { className: 'cluster' }, [retryBtn]),
+      );
+      return;
+    }
+
+    if (res.code !== 'SUPABASE_NOT_CONFIGURED') {
+      store.setState({ pendingIdempotencyKey: '' });
+    }
+
+    const variant =
+      res.code === 'DUPLICATE_RECEIPT' ||
+      res.code === 'NOT_QUALIFYING' ||
+      res.code === 'COOLDOWN_ACTIVE' ||
+      res.code === 'PROGRAMME_EXPIRED_OR_INACTIVE' ||
+      res.code === 'FORBIDDEN'
+        ? 'danger'
+        : 'warning';
+    const title =
+      res.code === 'DUPLICATE_RECEIPT'
+        ? 'Duplicate Receipt Rejected'
+        : res.code === 'COOLDOWN_ACTIVE'
+        ? 'Cooldown Period Active'
+        : res.code === 'PROGRAMME_EXPIRED_OR_INACTIVE'
+        ? 'Programme Inactive or Expired'
+        : res.code === 'NOT_QUALIFYING' || res.code === 'PURCHASE_BELOW_THRESHOLD'
+        ? 'Purchase Below Threshold'
+        : 'Backend Edge Function Required';
+    awardStatusHost.appendChild(createAlert({ variant, title, message: res.message }));
+    showToast({ message: res.message, variant });
+  }
 
   awardForm?.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -245,7 +375,7 @@ export function initAdminScannerPage() {
       return;
     }
 
-    const calculatedStamps = calculateEligibleStamps({
+    const estimatedStamps = calculateEligibleStamps({
       amountInr: values.purchaseAmount,
       qualifyingAmountInr: selected.programme.qualifyingAmountInr,
       calculationRule: selected.programme.calculationRule,
@@ -255,29 +385,7 @@ export function initAdminScannerPage() {
       type: 'button',
       className: 'btn btn--primary',
       text: 'Confirm Award Request',
-      onClick: async () => {
-        setButtonLoading(confirmBtn, true, 'Submitting...');
-        const res = await awardStampsForPurchase({
-          customerId: selected.customer.id,
-          purchaseRef: values.purchaseRef,
-          amountInr: Number(values.purchaseAmount),
-          calculatedStamps,
-        });
-        setButtonLoading(confirmBtn, false);
-        closeModal();
-
-        clearElement(awardStatusHost);
-        const variant =
-          res.code === 'DUPLICATE_RECEIPT' || res.code === 'NOT_QUALIFYING' ? 'danger' : 'warning';
-        const title =
-          res.code === 'DUPLICATE_RECEIPT'
-            ? 'Duplicate Receipt Rejected'
-            : res.code === 'NOT_QUALIFYING'
-            ? 'Purchase Below Threshold'
-            : 'Backend Edge Function Required (Phase 3)';
-        awardStatusHost.appendChild(createAlert({ variant, title, message: res.message }));
-        showToast({ message: res.message, variant });
-      },
+      onClick: () => executeStampSubmission(values, estimatedStamps, confirmBtn),
     });
 
     openModal({
@@ -288,8 +396,8 @@ export function initAdminScannerPage() {
           text: `Verify purchase ${values.purchaseRef} (₹${Number(values.purchaseAmount).toLocaleString('en-IN')}) for ${selected.customer.name} (${selected.customer.id}).`,
         }),
         el('div', { className: 'stamp-preview-box' }, [
-          el('span', { className: 'text-sm', text: 'Calculated Eligible Stamps' }),
-          el('strong', { className: 'text-lg', text: `${calculatedStamps}` }),
+          el('span', { className: 'text-sm', text: 'Estimated Eligible Stamps (Backend Authoritative)' }),
+          el('strong', { className: 'text-lg', text: `${estimatedStamps}` }),
         ]),
       ]),
       footerActions: [
@@ -337,20 +445,21 @@ export function initAdminStampsPage() {
   const sortSelect = qs('#stamps-sort');
 
   const store = createStore({
+    allRows: [],
     query: '',
     dateFrom: '',
     dateTo: '',
     status: 'all',
     sortBy: 'date-desc',
     page: 1,
-    loading: false,
+    loading: true,
   });
 
   const render = () => {
-    const { query, dateFrom, dateTo, status, sortBy, page, loading } = store.getState();
+    const { allRows, query, dateFrom, dateTo, status, sortBy, page, loading } = store.getState();
     const q = query.trim().toLowerCase();
 
-    let rows = ADMIN_DEV_FIXTURE.stampTransactions.filter((tx) => {
+    let rows = allRows.filter((tx) => {
       const matchesQ =
         !q ||
         tx.id.toLowerCase().includes(q) ||
@@ -448,15 +557,39 @@ export function initAdminStampsPage() {
     render();
   });
 
-  render();
+  async function loadTransactions() {
+    store.setState({ loading: true });
+    render();
+    const res = await fetchStampTransactions();
+    if (!res.ok) {
+      store.setState({ loading: false, allRows: [] });
+      showToast({ message: res.message || 'Unable to load stamp transactions.', variant: 'danger' });
+    } else {
+      store.setState({ loading: false, allRows: res.rows });
+    }
+    render();
+  }
+
+  loadTransactions();
 }
 
 /* --------------------------------------------------------------------------
    3. Rewards Catalogue Management (admin/rewards.html)
    -------------------------------------------------------------------------- */
-function openRewardFormModal(existing = null) {
+function openRewardFormModal(existing = null, programmes = [], onSaved = () => {}) {
   const isEdit = Boolean(existing);
   const statusRegion = el('div', { 'aria-live': 'polite' });
+
+  const programmeOptions = [
+    el('option', { value: '', text: 'All Active Programmes', selected: !existing?.programmeId }),
+    ...programmes.map((p) =>
+      el('option', {
+        value: p.id,
+        text: `${p.name} (${p.status})`,
+        selected: existing?.programmeId === p.id,
+      }),
+    ),
+  ];
 
   const form = el('form', { className: 'form-stack', novalidate: true }, [
     statusRegion,
@@ -481,8 +614,35 @@ function openRewardFormModal(existing = null) {
         ),
       ]),
       el('div', { className: 'field' }, [
-        el('label', { className: 'field__label', for: 'rw-value', text: 'Reward Value *' }),
-        el('input', { id: 'rw-value', name: 'valueLabel', type: 'text', className: 'input', placeholder: 'e.g. ₹500 Off / 15% Off', value: existing?.valueLabel || '', required: true }),
+        el('label', { className: 'field__label', for: 'rw-value', text: 'Reward Value Label *' }),
+        el('input', { id: 'rw-value', name: 'valueLabel', type: 'text', className: 'input', placeholder: 'e.g. ₹500 Off / 15% Off / Free Tee', value: existing?.valueLabel || '', required: true }),
+      ]),
+    ]),
+    el('div', { className: 'grid grid-2' }, [
+      el('div', { className: 'field' }, [
+        el('label', { className: 'field__label', for: 'rw-amt', text: 'Fixed Discount (₹, optional)' }),
+        el('input', {
+          id: 'rw-amt',
+          name: 'discountAmountInr',
+          type: 'number',
+          min: '0',
+          className: 'input',
+          placeholder: 'e.g. 500',
+          value: existing?.discountAmountInr != null ? String(existing.discountAmountInr) : '',
+        }),
+      ]),
+      el('div', { className: 'field' }, [
+        el('label', { className: 'field__label', for: 'rw-pct', text: 'Percentage Discount (%, optional)' }),
+        el('input', {
+          id: 'rw-pct',
+          name: 'discountPercent',
+          type: 'number',
+          min: '1',
+          max: '100',
+          className: 'input',
+          placeholder: 'e.g. 15',
+          value: existing?.discountPercent != null ? String(existing.discountPercent) : '',
+        }),
       ]),
     ]),
     el('div', { className: 'grid grid-3' }, [
@@ -491,8 +651,8 @@ function openRewardFormModal(existing = null) {
         el('input', { id: 'rw-stamps', name: 'requiredStamps', type: 'number', min: '1', className: 'input', value: String(existing?.requiredStamps || 10), required: true }),
       ]),
       el('div', { className: 'field' }, [
-        el('label', { className: 'field__label', for: 'rw-validity', text: 'Validity (Months)' }),
-        el('input', { id: 'rw-validity', name: 'validityMonths', type: 'number', min: '1', className: 'input', value: String(existing?.validityMonths || 6) }),
+        el('label', { className: 'field__label', for: 'rw-validity', text: 'Validity (Months) *' }),
+        el('input', { id: 'rw-validity', name: 'validityMonths', type: 'number', min: '1', className: 'input', value: String(existing?.validityMonths || 6), required: true }),
       ]),
       el('div', { className: 'field' }, [
         el('label', { className: 'field__label', for: 'rw-status', text: 'Status' }),
@@ -502,9 +662,59 @@ function openRewardFormModal(existing = null) {
         ]),
       ]),
     ]),
-    el('div', { className: 'field' }, [
-      el('label', { className: 'field__label', for: 'rw-limit', text: 'Redemption Limit' }),
-      el('input', { id: 'rw-limit', name: 'redemptionLimit', type: 'text', className: 'input', value: existing?.redemptionLimit || '1 per card completion' }),
+    el('div', { className: 'grid grid-2' }, [
+      el('div', { className: 'field' }, [
+        el('label', { className: 'field__label', for: 'rw-programme', text: 'Programme Association' }),
+        el('select', { id: 'rw-programme', name: 'programmeId', className: 'select' }, programmeOptions),
+      ]),
+      el('div', { className: 'field' }, [
+        el('label', { className: 'field__label', for: 'rw-limit-count', text: 'Max Redemptions / Member (Blank = Unlimited)' }),
+        el('input', {
+          id: 'rw-limit-count',
+          name: 'redemptionLimitPerMember',
+          type: 'number',
+          min: '1',
+          className: 'input',
+          placeholder: 'e.g. 1',
+          value: existing?.redemptionLimitPerMember != null ? String(existing.redemptionLimitPerMember) : '',
+        }),
+      ]),
+    ]),
+    el('div', { className: 'grid grid-2' }, [
+      el('div', { className: 'field' }, [
+        el('label', { className: 'field__label', for: 'rw-limit', text: 'Redemption Limit Label' }),
+        el('input', { id: 'rw-limit', name: 'redemptionLimit', type: 'text', className: 'input', value: existing?.redemptionLimit || '1 per card completion' }),
+      ]),
+      el('div', { className: 'field' }, [
+        el('label', { className: 'field__label', for: 'rw-eligibility', text: 'Eligibility Rule' }),
+        el('input', {
+          id: 'rw-eligibility',
+          name: 'eligibilityRule',
+          type: 'text',
+          className: 'input',
+          value: existing?.eligibilityRule || 'All active BONFREE-HUB members',
+        }),
+      ]),
+    ]),
+    el('div', { className: 'grid grid-2' }, [
+      el('div', { className: 'field' }, [
+        el('label', { className: 'field__label', for: 'rw-min-lifetime', text: 'Min Lifetime Stamps Required (0 = Any)' }),
+        el('input', {
+          id: 'rw-min-lifetime',
+          name: 'minLifetimeStamps',
+          type: 'number',
+          min: '0',
+          className: 'input',
+          value: String(existing?.eligibilityConfig?.min_lifetime_stamps || 0),
+        }),
+      ]),
+      el('div', { className: 'field' }, [
+        el('label', { className: 'field__label', for: 'rw-bday-only', text: 'Birthday Month Restriction' }),
+        el('select', { id: 'rw-bday-only', name: 'birthdayMonthOnly', className: 'select' }, [
+          el('option', { value: 'false', text: 'Not restricted to birth month', selected: !existing?.eligibilityConfig?.birthday_month_only }),
+          el('option', { value: 'true', text: 'Birth month members only', selected: Boolean(existing?.eligibilityConfig?.birthday_month_only) }),
+        ]),
+      ]),
     ]),
     el('div', { className: 'field' }, [
       el('label', { className: 'field__label', for: 'rw-desc', text: 'Description *' }),
@@ -527,13 +737,27 @@ function openRewardFormModal(existing = null) {
       }
 
       setButtonLoading(submitBtn, true, 'Saving...');
-      const res = await saveRewardDefinition(values);
+      const res = await saveRewardDefinition({
+        id: existing?.id || null,
+        ...values,
+      });
       setButtonLoading(submitBtn, false);
       if (!res.ok) {
         statusRegion.appendChild(
-          createAlert({ variant: 'warning', title: 'Database Save Pending (Phase 3)', message: res.message }),
+          createAlert({
+            variant: res.code === 'SUPABASE_NOT_CONFIGURED' ? 'warning' : 'danger',
+            title: res.code === 'SUPABASE_NOT_CONFIGURED' ? 'Database Connection Required' : 'Unable to Save Reward',
+            message: res.message,
+          }),
         );
-        showToast({ message: res.message, variant: 'warning' });
+        showToast({ message: res.message, variant: res.code === 'SUPABASE_NOT_CONFIGURED' ? 'warning' : 'danger' });
+      } else {
+        closeModal();
+        showToast({
+          message: isEdit ? `Reward "${values.title}" updated.` : `Reward "${values.title}" created.`,
+          variant: 'success',
+        });
+        onSaved();
       }
     },
   });
@@ -555,7 +779,7 @@ export function initAdminRewardsPage() {
   mountAdminShell({ activeId: 'rewards' });
 
   const typeFilter = qs('#rewards-type-filter');
-  const store = createStore({ type: 'all' });
+  const store = createStore({ type: 'all', rewards: [], programmes: [], loading: true });
 
   const typeIcon = (type) => {
     if (type === 'Percentage Discount') return 'percent';
@@ -565,15 +789,60 @@ export function initAdminRewardsPage() {
     return 'gift';
   };
 
+  async function loadRewards() {
+    store.setState({ loading: true });
+    render();
+    const res = await fetchAdminRewards();
+    if (!res.ok) {
+      store.setState({ loading: false, rewards: [], programmes: [] });
+      showToast({ message: res.message || 'Unable to load rewards catalogue.', variant: 'danger' });
+    } else {
+      store.setState({ loading: false, rewards: res.rewards || [], programmes: res.programmes || [] });
+    }
+    render();
+  }
+
   const render = () => {
     clearElement(gridHost);
-    const { type } = store.getState();
-    const list =
-      type === 'all'
-        ? ADMIN_DEV_FIXTURE.rewardsCatalog
-        : ADMIN_DEV_FIXTURE.rewardsCatalog.filter((r) => r.type === type);
+    const { type, rewards, programmes, loading } = store.getState();
+
+    if (loading) {
+      gridHost.appendChild(
+        el('div', { className: 'card text-sm text-muted', text: 'Loading rewards catalogue...' }),
+      );
+      return;
+    }
+
+    const list = type === 'all' ? rewards : rewards.filter((r) => r.type === type);
+    if (list.length === 0) {
+      gridHost.appendChild(
+        el('div', { className: 'card text-sm text-muted', text: 'No rewards match this filter.' }),
+      );
+      return;
+    }
 
     for (const rw of list) {
+      const nextStatus = rw.status === 'Active' ? 'Inactive' : 'Active';
+      const toggleBtn = el('button', {
+        type: 'button',
+        className: 'btn btn--outline-muted btn--sm',
+        text: rw.status === 'Active' ? 'Deactivate' : 'Activate',
+        onClick: async () => {
+          setButtonLoading(toggleBtn, true, 'Updating...');
+          const res = await toggleRewardStatus({ rewardId: rw.id, nextStatus });
+          setButtonLoading(toggleBtn, false);
+          if (!res.ok) {
+            showToast({
+              message: res.message,
+              variant: res.code === 'SUPABASE_NOT_CONFIGURED' ? 'warning' : 'danger',
+            });
+          } else {
+            showToast({ message: `"${rw.title}" is now ${nextStatus}.`, variant: 'success' });
+            loadRewards();
+          }
+        },
+      });
+
       gridHost.appendChild(
         el('article', { className: 'reward-admin-card' }, [
           el('div', { className: 'stack', style: 'gap: 0.75rem;' }, [
@@ -593,14 +862,22 @@ export function initAdminRewardsPage() {
           el('div', { className: 'stack', style: 'gap: 0.5rem; padding-top: 0.75rem; border-top: 1px solid var(--border-subtle);' }, [
             el('div', { className: 'between text-xs text-muted' }, [
               el('span', { text: `${rw.requiredStamps} Stamps · Valid ${rw.validityMonths} mo` }),
+              el('span', { text: rw.programmeName || 'All Programmes' }),
+            ]),
+            el('div', { className: 'between text-xs text-muted' }, [
+              el('span', { text: rw.eligibilityRule || 'All active members' }),
               el('span', { text: rw.redemptionLimit }),
             ]),
-            el('button', {
-              type: 'button',
-              className: 'btn btn--outline-muted btn--sm btn--block',
-              text: 'Edit Reward',
-              onClick: () => openRewardFormModal(rw),
-            }),
+            el('div', { className: 'cluster' }, [
+              el('button', {
+                type: 'button',
+                className: 'btn btn--outline-muted btn--sm',
+                style: 'flex: 1;',
+                text: 'Edit Reward',
+                onClick: () => openRewardFormModal(rw, programmes, loadRewards),
+              }),
+              toggleBtn,
+            ]),
           ]),
         ]),
       );
@@ -612,14 +889,18 @@ export function initAdminRewardsPage() {
     render();
   });
 
-  qs('#create-reward-btn')?.addEventListener('click', () => openRewardFormModal(null));
-  render();
+  qs('#create-reward-btn')?.addEventListener('click', () => {
+    const { programmes } = store.getState();
+    openRewardFormModal(null, programmes, loadRewards);
+  });
+
+  loadRewards();
 }
 
 /* --------------------------------------------------------------------------
    4. Redemptions Verification (admin/redemptions.html)
    -------------------------------------------------------------------------- */
-function openRedemptionVerifyModal(item) {
+function openRedemptionVerifyModal(item, onProcessed = () => {}) {
   const statusRegion = el('div', { 'aria-live': 'polite' });
   const reasonInput = el('input', {
     type: 'text',
@@ -635,39 +916,77 @@ function openRedemptionVerifyModal(item) {
     onClick: async () => {
       clearElement(statusRegion);
       setButtonLoading(confirmBtn, true, 'Verifying...');
-      const res = await processRedemption({ redemptionId: item.id, action: 'confirm' });
+      const res = await processRedemption({
+        redemptionId: item.id,
+        voucherCode: item.voucherCode,
+        action: 'confirm',
+      });
       setButtonLoading(confirmBtn, false);
-      statusRegion.appendChild(
-        createAlert({ variant: 'warning', title: 'Backend Edge Function Required (Phase 3)', message: res.message }),
-      );
-      showToast({ message: res.message, variant: 'warning' });
+      if (!res.ok) {
+        statusRegion.appendChild(
+          createAlert({
+            variant: res.code === 'SUPABASE_NOT_CONFIGURED' ? 'warning' : 'danger',
+            title: res.code === 'SUPABASE_NOT_CONFIGURED' ? 'Backend Edge Function Required' : 'Verification Rejected',
+            message: res.message,
+          }),
+        );
+        showToast({ message: res.message, variant: res.code === 'SUPABASE_NOT_CONFIGURED' ? 'warning' : 'danger' });
+      } else {
+        closeModal();
+        showToast({ message: res.message, variant: 'success' });
+        onProcessed();
+      }
     },
   });
 
   const rejectBtn = el('button', {
     type: 'button',
     className: 'btn btn--danger',
-    text: 'Reject',
+    text: 'Reject & Refund Stamps',
     onClick: async () => {
       clearElement(statusRegion);
       setButtonLoading(rejectBtn, true, 'Rejecting...');
       const res = await processRedemption({
         redemptionId: item.id,
+        voucherCode: item.voucherCode,
         action: 'reject',
         rejectionReason: reasonInput.value,
       });
       setButtonLoading(rejectBtn, false);
-      statusRegion.appendChild(
-        createAlert({ variant: 'warning', title: 'Backend Edge Function Required (Phase 3)', message: res.message }),
-      );
-      showToast({ message: res.message, variant: 'warning' });
+      if (!res.ok) {
+        statusRegion.appendChild(
+          createAlert({
+            variant: res.code === 'SUPABASE_NOT_CONFIGURED' ? 'warning' : 'danger',
+            title: res.code === 'SUPABASE_NOT_CONFIGURED' ? 'Backend Edge Function Required' : 'Rejection Error',
+            message: res.message,
+          }),
+        );
+        showToast({ message: res.message, variant: res.code === 'SUPABASE_NOT_CONFIGURED' ? 'warning' : 'danger' });
+      } else {
+        closeModal();
+        showToast({ message: res.message, variant: 'info' });
+        onProcessed();
+      }
     },
   });
+
+  const statusTone =
+    item.status === 'Completed'
+      ? 'active'
+      : item.status === 'Pending'
+      ? 'warning'
+      : item.status === 'Rejected'
+      ? 'danger'
+      : 'neutral';
 
   openModal({
     title: `Verify Voucher — ${item.voucherCode}`,
     body: el('div', { className: 'stack' }, [
       statusRegion,
+      el('div', { className: 'between' }, [
+        el('span', { className: 'text-xs text-muted', text: 'Current Voucher Status' }),
+        createStatusBadge(item.status, statusTone),
+      ]),
       el('div', { className: 'grid grid-2 card card--ivory' }, [
         el('div', {}, [el('div', { className: 'text-xs text-muted', text: 'Customer' }), el('strong', { className: 'text-sm', text: `${item.customerName} (${item.customerId})` })]),
         el('div', {}, [el('div', { className: 'text-xs text-muted', text: 'Phone' }), el('strong', { className: 'text-sm', text: item.customerPhone })]),
@@ -680,7 +999,14 @@ function openRedemptionVerifyModal(item) {
             el('label', { className: 'field__label', text: 'Rejection Reason (if rejecting)' }),
             reasonInput,
           ])
-        : null,
+        : createAlert({
+            variant: item.status === 'Completed' ? 'success' : 'warning',
+            title: `Voucher ${item.status}`,
+            message:
+              item.status === 'Completed'
+                ? 'This single-use voucher has already been redeemed and cannot be reused.'
+                : `This voucher is marked ${item.status} and cannot be confirmed.`,
+          }),
     ]),
     footerActions:
       item.status === 'Pending'
@@ -702,22 +1028,27 @@ export function initAdminRedemptionsPage() {
   const tabsHost = qs('#redemptions-tabs');
   const searchInput = qs('#redemptions-search');
   const rewardFilter = qs('#redemptions-reward-filter');
+  const verifyForm = qs('#voucher-verify-form');
+  const verifyInput = qs('#voucher-verify-input');
+  const verifyBtn = qs('#voucher-verify-btn');
 
   const store = createStore({
+    allRows: [],
     activeTab: 'Pending',
     query: '',
     rewardTitle: 'all',
     page: 1,
+    loading: true,
   });
 
   const statuses = ['Pending', 'Completed', 'Expired', 'Rejected'];
 
   function renderTabs() {
     clearElement(tabsHost);
-    const { activeTab } = store.getState();
+    const { activeTab, allRows } = store.getState();
 
     for (const status of statuses) {
-      const count = ADMIN_DEV_FIXTURE.redemptions.filter((r) => r.status === status).length;
+      const count = allRows.filter((r) => r.status === status).length;
       tabsHost.appendChild(
         el('button', {
           type: 'button',
@@ -734,10 +1065,10 @@ export function initAdminRedemptionsPage() {
   }
 
   function renderTable() {
-    const { activeTab, query, rewardTitle, page } = store.getState();
+    const { activeTab, query, rewardTitle, page, allRows, loading } = store.getState();
     const q = query.trim().toLowerCase();
 
-    const rows = ADMIN_DEV_FIXTURE.redemptions.filter((r) => {
+    const rows = allRows.filter((r) => {
       const matchesTab = r.status === activeTab;
       const matchesQ =
         !q ||
@@ -749,15 +1080,23 @@ export function initAdminRedemptionsPage() {
       return matchesTab && matchesQ && matchesReward;
     });
 
+    const pageSize = 8;
+    const slice = rows.slice((page - 1) * pageSize, page * pageSize);
+
     const toneFor = (st) =>
       st === 'Completed' ? 'active' : st === 'Pending' ? 'warning' : st === 'Rejected' ? 'danger' : 'neutral';
 
     renderDataTable(tableHost, {
-      rows,
+      loading,
+      rows: slice,
       page,
-      pageSize: 8,
+      pageSize,
       totalItems: rows.length,
       emptyMessage: `No ${activeTab.toLowerCase()} redemptions match your lookup.`,
+      onPageChange: (nextPage) => {
+        store.setState({ page: nextPage });
+        renderTable();
+      },
       columns: [
         { key: 'requestedOn', label: 'Requested On' },
         {
@@ -785,12 +1124,43 @@ export function initAdminRedemptionsPage() {
               type: 'button',
               className: row.status === 'Pending' ? 'btn btn--primary btn--sm' : 'btn btn--outline-muted btn--sm',
               text: row.status === 'Pending' ? 'Verify & Redeem' : 'Inspect',
-              onClick: () => openRedemptionVerifyModal(row),
+              onClick: () => openRedemptionVerifyModal(row, loadRedemptions),
             }),
         },
       ],
     });
   }
+
+  async function loadRedemptions() {
+    store.setState({ loading: true });
+    renderTable();
+    const res = await fetchAdminRedemptions();
+    if (!res.ok) {
+      store.setState({ loading: false, allRows: [] });
+      showToast({ message: res.message || 'Unable to load redemptions.', variant: 'danger' });
+    } else {
+      store.setState({ loading: false, allRows: res.rows || [] });
+    }
+    renderTabs();
+    renderTable();
+  }
+
+  verifyForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const code = verifyInput?.value?.trim() || '';
+    if (!code) {
+      showToast({ message: 'Enter a voucher code to verify.', variant: 'warning' });
+      return;
+    }
+    if (verifyBtn) setButtonLoading(verifyBtn, true, 'Checking...');
+    const res = await verifyVoucherCode(code);
+    if (verifyBtn) setButtonLoading(verifyBtn, false);
+    if (!res.ok) {
+      showToast({ message: res.message || 'Voucher lookup failed.', variant: 'danger' });
+      return;
+    }
+    openRedemptionVerifyModal(res.voucher, loadRedemptions);
+  });
 
   qs('#redemptions-apply-btn')?.addEventListener('click', () => {
     store.setState({
@@ -801,6 +1171,5 @@ export function initAdminRedemptionsPage() {
     renderTable();
   });
 
-  renderTabs();
-  renderTable();
+  loadRedemptions();
 }

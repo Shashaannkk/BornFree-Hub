@@ -3,7 +3,8 @@
 .env.local
 .env.*.local
 
-# Dependencies & tooling
+# Build & Dependencies
+dist/
 node_modules/
 .vercel/
 .supabase/

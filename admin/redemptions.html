@@ -42,6 +42,25 @@
           </div>
 
           <div class="stack" style="gap: 1.25rem">
+            <form
+              id="voucher-verify-form"
+              class="card filter-toolbar"
+              style="grid-template-columns: 1fr auto; padding: 1rem"
+              novalidate
+            >
+              <input
+                id="voucher-verify-input"
+                name="voucherCode"
+                type="text"
+                class="input"
+                placeholder="Quick verify customer voucher code (e.g. BFH-25K-8M2Q9)..."
+                aria-label="Enter customer voucher code to verify"
+              />
+              <button type="submit" id="voucher-verify-btn" class="btn btn--primary">
+                Verify Voucher Code
+              </button>
+            </form>
+
             <div id="redemptions-tabs" class="tabs" role="tablist" aria-label="Redemption status"></div>
 
             <div class="filter-toolbar" style="grid-template-columns: 1.5fr 1fr auto">

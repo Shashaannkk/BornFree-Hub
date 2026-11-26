@@ -141,44 +141,52 @@
                 </div>
               </section>
 
-              <!-- 3. Security & Notification Preferences -->
+              <!-- 3. Security & Account Preferences -->
               <section class="card stack">
-                <h2 class="card__title">Security &amp; Notification Preferences</h2>
+                <h2 class="card__title">Security &amp; Account Preferences</h2>
+                <div class="alert alert--info">
+                  <span data-icon="shield-check" data-icon-size="16"></span>
+                  <span class="text-xs">
+                    <strong>Operational:</strong> PostgreSQL Row Level Security, permission-based RBAC,
+                    and append-only audit logging are active on every operation.
+                  </span>
+                </div>
+
                 <div class="setting-toggle-row">
                   <div>
-                    <strong class="text-sm">Two-Factor Authentication (2FA)</strong>
+                    <strong class="text-sm">Two-Factor Authentication (TOTP 2FA)</strong>
                     <div class="text-xs text-muted">
-                      Require TOTP verification for administrator sign-ins.
+                      Not configured — requires Supabase MFA enrolment provider to enforce TOTP challenges.
                     </div>
                   </div>
-                  <label class="switch" aria-label="Toggle 2FA">
-                    <input type="checkbox" name="twoFactor" checked />
+                  <label class="switch" aria-label="TOTP 2FA (Not Configured)">
+                    <input type="checkbox" name="twoFactor" disabled />
                     <span class="switch__track"></span>
                   </label>
                 </div>
 
                 <div class="setting-toggle-row">
                   <div>
-                    <strong class="text-sm">Login Alerts</strong>
+                    <strong class="text-sm">Automated Device Login Email Alerts</strong>
                     <div class="text-xs text-muted">
-                      Notify administrators on new device console logins.
+                      Not configured — requires an external transactional webhook/SMTP trigger.
                     </div>
                   </div>
-                  <label class="switch" aria-label="Toggle Login Alerts">
-                    <input type="checkbox" name="loginAlerts" checked />
+                  <label class="switch" aria-label="Login Alerts (Not Configured)">
+                    <input type="checkbox" name="loginAlerts" disabled />
                     <span class="switch__track"></span>
                   </label>
                 </div>
 
                 <div class="setting-toggle-row">
                   <div>
-                    <strong class="text-sm">High-Value Redemption Alerts</strong>
+                    <strong class="text-sm">Daily Operations Digest Preference</strong>
                     <div class="text-xs text-muted">
-                      Send instant alerts for voucher redemptions >= 20 stamps.
+                      Store preference saved per active staff account in PostgreSQL.
                     </div>
                   </div>
-                  <label class="switch" aria-label="Toggle High Value Redemption Alerts">
-                    <input type="checkbox" name="redemptionAlerts" checked />
+                  <label class="switch" aria-label="Toggle Daily Operations Digest Preference">
+                    <input type="checkbox" name="dailySummaryView" checked />
                     <span class="switch__track"></span>
                   </label>
                 </div>

@@ -53,8 +53,8 @@
             data-member-view="profile"
             aria-label="Open member profile"
           >
-            <span class="member-topbar__avatar" aria-hidden="true">A</span>
-            <span>Aanya</span>
+            <span id="member-topbar-avatar" class="member-topbar__avatar" aria-hidden="true">A</span>
+            <span id="member-topbar-name">Aanya</span>
           </button>
         </div>
       </div>
@@ -122,21 +122,25 @@
       <div class="container member-banner__grid">
         <div class="member-banner__content">
           <span class="eyebrow">MY BONFREE-HUB</span>
-          <h1 class="member-banner__title">Welcome back, <em>Aanya</em></h1>
+          <h1 class="member-banner__title">
+            Welcome back, <em id="member-banner-name">Aanya</em>
+          </h1>
           <div class="cluster">
             <div class="member-id-pill">
               <span>Membership ID:</span>
-              <strong>BF-001248</strong>
+              <strong id="member-banner-id">BF-001248</strong>
               <button
                 type="button"
                 id="copy-member-id-btn"
                 class="btn btn--icon btn--outline-muted btn--sm"
-                aria-label="Copy Membership ID BF-001248"
+                aria-label="Copy Membership ID"
               >
                 <span data-icon="copy" data-icon-size="14"></span>
               </button>
             </div>
-            <span class="badge badge--neutral">Development Preview Data (Read-Only)</span>
+            <span id="member-fixture-badge" class="badge badge--neutral">
+              Development Preview Data (Read-Only)
+            </span>
           </div>
           <p class="text-sm text-muted" style="max-width: 52ch">
             Your hub for contemporary Gen Z streetwear and casual ready-to-wear for young men and

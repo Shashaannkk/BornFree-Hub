@@ -22,7 +22,7 @@
   display: inline-block;
   width: 48px;
   height: 1px;
-  background-color: var(--border-default);
+  background-color: var(--color-brand-accent);
 }
 
 .eyebrow--inverse {
@@ -91,24 +91,25 @@
 }
 
 .btn--primary {
-  background-color: var(--color-black);
+  background-color: var(--color-brand-primary);
   color: var(--color-white);
-  border-color: var(--color-black);
+  border-color: var(--color-brand-primary);
 }
 
 .btn--primary:hover:not(:disabled) {
-  background-color: var(--color-graphite);
-  border-color: var(--color-graphite);
+  background-color: var(--color-brand-primary-hover);
+  border-color: var(--color-brand-primary-hover);
 }
 
 .btn--secondary {
   background-color: var(--color-white);
-  color: var(--color-black);
-  border-color: var(--border-strong);
+  color: var(--color-brand-secondary);
+  border-color: var(--color-brand-secondary);
 }
 
 .btn--secondary:hover:not(:disabled) {
-  background-color: var(--surface-subtle);
+  background-color: var(--color-brand-secondary);
+  color: var(--color-white);
 }
 
 .btn--outline-muted {
@@ -118,8 +119,9 @@
 }
 
 .btn--outline-muted:hover:not(:disabled) {
-  border-color: var(--color-black);
-  background-color: var(--surface-subtle);
+  border-color: var(--color-brand-secondary);
+  color: var(--color-brand-secondary);
+  background-color: var(--color-brand-secondary-soft);
 }
 
 .btn--ghost {
@@ -256,8 +258,8 @@
 .select:focus,
 .textarea:focus {
   outline: none;
-  border-color: var(--color-black);
-  box-shadow: 0 0 0 1px var(--color-black);
+  border-color: var(--color-brand-secondary);
+  box-shadow: 0 0 0 1px var(--color-brand-secondary);
 }
 
 .field.has-error .input,
@@ -289,7 +291,7 @@
 .checkbox input[type='checkbox'] {
   width: 16px;
   height: 16px;
-  accent-color: var(--color-black);
+  accent-color: var(--color-brand-secondary);
 }
 
 .switch {
@@ -328,7 +330,7 @@
 }
 
 .switch input:checked + .switch__track {
-  background-color: var(--color-black);
+  background-color: var(--color-brand-secondary);
 }
 
 .switch input:checked + .switch__track::before {
@@ -352,7 +354,7 @@
 }
 
 .tab.is-active {
-  color: var(--color-black);
+  color: var(--color-brand-primary);
   font-weight: 600;
 }
 
@@ -363,7 +365,7 @@
   right: 0;
   bottom: -1px;
   height: 2px;
-  background-color: var(--color-black);
+  background-color: var(--color-brand-primary);
 }
 
 .segmented {
@@ -383,7 +385,7 @@
 }
 
 .segmented__btn.is-active {
-  background-color: var(--color-black);
+  background-color: var(--color-brand-secondary);
   color: var(--color-white);
 }
 
@@ -407,7 +409,7 @@
 }
 
 .card--interactive:hover {
-  border-color: var(--color-black);
+  border-color: var(--color-brand-secondary);
   box-shadow: var(--shadow-xs);
 }
 
@@ -466,7 +468,7 @@
   color: var(--color-white);
   border-radius: var(--radius-lg);
   padding: var(--space-6);
-  border: 1px solid var(--color-graphite);
+  border: 1px solid var(--color-brand-accent);
   box-shadow: var(--shadow-sm);
 }
 
@@ -479,7 +481,7 @@
 .loyalty-card__sub {
   font-size: 0.6875rem;
   letter-spacing: var(--tracking-eyebrow);
-  color: var(--color-text-inverse-muted);
+  color: var(--color-brand-accent);
   text-transform: uppercase;
   margin-top: var(--space-1);
 }
@@ -539,8 +541,8 @@
 }
 
 .stamp-slot.is-earned {
-  background-color: var(--color-black);
-  border-color: var(--color-black);
+  background-color: var(--color-brand-primary);
+  border-color: var(--color-brand-primary);
   color: var(--color-white);
 }
 
@@ -554,7 +556,7 @@
 
 .progress-track__fill {
   height: 100%;
-  background-color: var(--color-black);
+  background-color: var(--color-brand-primary);
   transition: width var(--duration-base) var(--ease-standard);
 }
 
@@ -601,9 +603,15 @@
 }
 
 .badge--dark {
-  background-color: var(--color-black);
-  border-color: var(--color-black);
-  color: var(--color-white);
+  background-color: var(--color-brand-accent-soft);
+  border-color: var(--color-brand-accent);
+  color: var(--color-brand-accent-text);
+}
+
+.badge--gold {
+  background-color: var(--color-brand-accent-soft);
+  border-color: var(--color-brand-accent);
+  color: var(--color-brand-accent-text);
 }
 
 /* --------------------------------------------------------------------------
@@ -646,7 +654,7 @@
 }
 
 .data-table tbody tr:hover {
-  background-color: #faf9f6;
+  background-color: var(--surface-row-hover);
 }
 
 .table-empty {
@@ -688,12 +696,13 @@
 }
 
 .page-btn:hover:not(:disabled) {
-  border-color: var(--color-black);
+  border-color: var(--color-brand-secondary);
+  color: var(--color-brand-secondary);
 }
 
 .page-btn.is-active {
-  background-color: var(--color-black);
-  border-color: var(--color-black);
+  background-color: var(--color-brand-primary);
+  border-color: var(--color-brand-primary);
   color: var(--color-white);
 }
 
@@ -774,7 +783,7 @@
   position: fixed;
   inset: 0;
   z-index: var(--z-modal);
-  background-color: rgba(16, 16, 16, 0.56);
+  background-color: var(--overlay-backdrop);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -840,7 +849,7 @@
 .skeleton {
   display: block;
   border-radius: var(--radius-xs);
-  background: linear-gradient(90deg, #ecebe6 25%, #f5f4f0 50%, #ecebe6 75%);
+  background: linear-gradient(90deg, var(--surface-skeleton) 25%, var(--surface-subtle) 50%, var(--surface-skeleton) 75%);
   background-size: 200% 100%;
   animation: bonfree-shimmer 1.4s ease-in-out infinite;
 }
@@ -876,7 +885,7 @@
 .loading-overlay {
   position: absolute;
   inset: 0;
-  background-color: rgba(255, 255, 255, 0.78);
+  background-color: var(--overlay-loading);
   display: flex;
   flex-direction: column;
   align-items: center;

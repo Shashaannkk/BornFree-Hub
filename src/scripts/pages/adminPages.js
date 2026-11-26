@@ -14,9 +14,15 @@ import { setButtonLoading, validateForm } from '../components/form.js';
 import { createLineChartSvg } from '../components/charts.js';
 import {
   ADMIN_DEV_FIXTURE,
+  fetchAdminCustomers,
+  fetchAdminProgrammes,
+  fetchStampTransactions,
+  requestStaffPasswordReset,
   saveLoyaltyProgramme,
   signInStaff,
 } from '../services/adminService.js';
+import { fetchAdminAnalytics } from '../services/adminExtendedService.js';
+import { isProductionEnvironment, isSupabaseConfigured } from '../core/config.js';
 
 /* --------------------------------------------------------------------------
    1. Admin Login (admin/login.html)
@@ -26,22 +32,83 @@ export function initAdminLoginPage() {
   if (!form) return;
 
   const statusRegion = qs('#admin-login-status');
+  const reason = new URLSearchParams(window.location.search).get('reason');
+  if (reason === 'staff_deactivated' && statusRegion) {
+    statusRegion.appendChild(
+      createAlert({
+        variant: 'danger',
+        title: 'Account Deactivated',
+        message: 'Your staff account has been deactivated and your session was terminated. Contact an Administrator.',
+      }),
+    );
+  } else if (reason === 'session_expired' && statusRegion) {
+    statusRegion.appendChild(
+      createAlert({
+        variant: 'warning',
+        title: 'Session Expired',
+        message: 'Your staff session expired. Please sign in again.',
+      }),
+    );
+  } else if (reason === 'signed_out' && statusRegion) {
+    statusRegion.appendChild(
+      createAlert({
+        variant: 'info',
+        title: 'Signed Out',
+        message: 'You have signed out of the BONFREE-HUB Admin Console.',
+      }),
+    );
+  }
 
   qs('#admin-forgot-link')?.addEventListener('click', (event) => {
     event.preventDefault();
+    const modalStatus = el('div', { 'aria-live': 'polite' });
+    const emailInput = el('input', {
+      type: 'email',
+      className: 'input',
+      placeholder: 'Enter your work email address',
+      required: true,
+      value: form.querySelector('[name="email"]')?.value || '',
+    });
+    const sendBtn = el('button', {
+      type: 'button',
+      className: 'btn btn--primary btn--sm',
+      text: 'Send Reset Link',
+      onClick: async () => {
+        clearElement(modalStatus);
+        setButtonLoading(sendBtn, true, 'Sending...');
+        const res = await requestStaffPasswordReset({ email: emailInput.value });
+        setButtonLoading(sendBtn, false);
+        modalStatus.appendChild(
+          createAlert({
+            variant: res.ok ? 'success' : res.code === 'SUPABASE_NOT_CONFIGURED' ? 'warning' : 'danger',
+            title: res.ok ? 'Recovery Link Sent' : 'Recovery Status',
+            message: res.message,
+          }),
+        );
+      },
+    });
+
     openModal({
       title: 'Staff Password Recovery',
-      body: el('p', {
-        className: 'text-sm text-muted',
-        text: 'Staff password resets are issued through verified Supabase Auth recovery emails or an authorized Super Admin once Phase 2B authentication is connected.',
-      }),
+      body: el('div', { className: 'form-stack' }, [
+        modalStatus,
+        el('p', {
+          className: 'text-sm text-muted',
+          text: 'Enter your staff work email to receive a Supabase Auth password setup/reset link.',
+        }),
+        el('div', { className: 'field' }, [
+          el('label', { className: 'field__label', text: 'Work Email Address' }),
+          emailInput,
+        ]),
+      ]),
       footerActions: [
         el('button', {
           type: 'button',
-          className: 'btn btn--primary btn--sm',
+          className: 'btn btn--outline-muted btn--sm',
           text: 'Close',
           onClick: closeModal,
         }),
+        sendBtn,
       ],
     });
   });
@@ -71,15 +138,24 @@ export function initAdminLoginPage() {
         password: values.password,
       });
 
-      if (!result.ok) {
+      if (result.ok) {
+        showToast({ message: 'Staff sign-in verified.', variant: 'success' });
+        window.location.href = 'dashboard.html';
+      } else {
         statusRegion.appendChild(
           createAlert({
-            variant: 'warning',
-            title: 'Supabase Staff Auth Pending (Phase 2B)',
+            variant: result.code === 'SUPABASE_NOT_CONFIGURED' ? 'warning' : 'danger',
+            title:
+              result.code === 'SUPABASE_NOT_CONFIGURED'
+                ? 'Supabase Staff Auth Pending'
+                : 'Staff Sign In Rejected',
             message: result.message,
           }),
         );
-        showToast({ message: result.message, variant: 'warning' });
+        showToast({
+          message: result.message,
+          variant: result.code === 'SUPABASE_NOT_CONFIGURED' ? 'warning' : 'danger',
+        });
       }
     } finally {
       setButtonLoading(submitBtn, false);
@@ -96,14 +172,69 @@ export function initAdminOverviewPage() {
 
   mountAdminShell({ activeId: 'overview' });
 
+  const reason = new URLSearchParams(window.location.search).get('reason');
+  if (reason === 'forbidden_module') {
+    showToast({
+      message: 'Access Restricted: Your staff role does not include permission for that module.',
+      variant: 'warning',
+      durationMs: 5000,
+    });
+  }
+
   const store = createStore({
     range: '30d',
-    mode: 'ready', // 'ready' | 'loading' | 'empty' | 'error'
+    mode: isSupabaseConfigured() ? 'loading' : 'ready',
+    liveSummary: null,
+    recentTxRows: isProductionEnvironment() || isSupabaseConfigured() ? [] : ADMIN_DEV_FIXTURE.recentTransactions,
+    recentRegRows: isProductionEnvironment() || isSupabaseConfigured() ? [] : ADMIN_DEV_FIXTURE.recentRegistrations,
   });
+
+  async function loadLiveOverview() {
+    if (!isSupabaseConfigured()) return;
+    const { range } = store.getState();
+    const period = range === '7d' ? 'weekly' : range === '90d' ? 'custom' : 'monthly';
+    const start90 = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10);
+    const today = new Date().toISOString().slice(0, 10);
+    store.setState({ mode: 'loading' });
+    render();
+    const [res, txRes, custRes] = await Promise.all([
+      fetchAdminAnalytics({
+        period,
+        startDate: range === '90d' ? start90 : undefined,
+        endDate: range === '90d' ? today : undefined,
+      }),
+      fetchStampTransactions(),
+      fetchAdminCustomers(),
+    ]);
+    if (!res.ok) {
+      store.setState({ mode: 'error' });
+    } else {
+      const txRows = txRes.ok
+        ? (txRes.rows || []).slice(0, 5).map((tx) => ({
+            timestamp: tx.dateTime,
+            customerId: tx.customerId,
+            customerName: tx.customerName,
+            type: tx.status || 'Earned',
+            delta: tx.stampsAwarded >= 0 ? `+${tx.stampsAwarded}` : String(tx.stampsAwarded),
+            balance: tx.stampsAwarded,
+          }))
+        : [];
+      const regRows = custRes.ok
+        ? (custRes.rows || []).slice(0, 5).map((c) => ({
+            id: c.id,
+            name: c.name,
+            programme: c.programme,
+            joinedAt: c.joinedOn,
+          }))
+        : [];
+      store.setState({ mode: 'ready', liveSummary: res.summary, recentTxRows: txRows, recentRegRows: regRows });
+    }
+    render();
+  }
 
   const render = () => {
     clearElement(host);
-    const { range, mode } = store.getState();
+    const { range, mode, liveSummary, recentTxRows, recentRegRows } = store.getState();
 
     if (mode === 'loading') {
       host.append(renderCardSkeleton(3), renderCardSkeleton(2));
@@ -146,7 +277,19 @@ export function initAdminOverviewPage() {
       return;
     }
 
-    const kpi = ADMIN_DEV_FIXTURE.kpisByRange[range];
+    const kpi = liveSummary
+      ? {
+          registeredCustomers: liveSummary.totalMembers,
+          activeCustomers: liveSummary.activeMembers,
+          totalLoyaltyCards: liveSummary.totalLoyaltyCards,
+          stampsIssued: liveSummary.stampsAwarded,
+          rewardsUnlocked: liveSummary.rewardsUnlocked,
+          rewardsRedeemed: liveSummary.rewardsRedeemed,
+          qualifyingPurchases: liveSummary.qualifyingPurchases,
+          loyaltySalesInr: liveSummary.qualifyingRevenueInr,
+        }
+      : ADMIN_DEV_FIXTURE.kpisByRange[range];
+
     const kpiCards = [
       {
         icon: 'users',
@@ -158,7 +301,7 @@ export function initAdminOverviewPage() {
         icon: 'qr-code',
         label: 'Total Loyalty Cards',
         value: kpi.totalLoyaltyCards.toLocaleString('en-IN'),
-        delta: '100% digital QR passes issued',
+        delta: 'Active digital QR passes',
       },
       {
         icon: 'stamp',
@@ -176,13 +319,13 @@ export function initAdminOverviewPage() {
         icon: 'receipt',
         label: 'Qualifying Purchases',
         value: kpi.qualifyingPurchases.toLocaleString('en-IN'),
-        delta: '84.2% qualification rate',
+        delta: liveSummary ? `${liveSummary.avgPurchaseFrequency ?? 0}x avg frequency` : 'Qualifying transactions',
       },
       {
         icon: 'bar-chart',
         label: 'Loyalty Sales',
-        value: `₹${kpi.loyaltySalesInr.toLocaleString('en-IN')}`,
-        delta: 'Development preview aggregate',
+        value: `₹${Number(kpi.loyaltySalesInr || 0).toLocaleString('en-IN')}`,
+        delta: liveSummary ? 'Live Supabase database aggregate' : 'Development preview aggregate',
       },
     ];
 
@@ -204,17 +347,20 @@ export function initAdminOverviewPage() {
     const chartCard = el('section', { className: 'card stack' }, [
       el('div', { className: 'between' }, [
         el('h2', { className: 'card__title', text: 'Customer Growth' }),
-        el('span', { className: 'badge badge--dark', text: '+18.4% vs. previous 6 months' }),
+        el('span', {
+          className: 'badge badge--dark',
+          text: liveSummary ? `${liveSummary.totalMembers} total members` : '+18.4% vs. previous 6 months',
+        }),
       ]),
-      createLineChartSvg(ADMIN_DEV_FIXTURE.growthSeries, {
-        maxVal: 13000,
-        ariaLabel: 'Customer growth line chart from Jul to Dec',
+      createLineChartSvg(liveSummary?.monthlyGrowth || ADMIN_DEV_FIXTURE.growthSeries, {
+        ariaLabel: 'Customer growth line chart',
       }),
     ]);
 
     const txTableHost = el('div');
     renderDataTable(txTableHost, {
-      rows: ADMIN_DEV_FIXTURE.recentTransactions,
+      rows: recentTxRows || [],
+      emptyMessage: 'No recent stamp transactions recorded yet.',
       columns: [
         { key: 'timestamp', label: 'Date & Time' },
         {
@@ -243,7 +389,8 @@ export function initAdminOverviewPage() {
 
     const regTableHost = el('div');
     renderDataTable(regTableHost, {
-      rows: ADMIN_DEV_FIXTURE.recentRegistrations,
+      rows: recentRegRows || [],
+      emptyMessage: 'No recent customer registrations recorded yet.',
       columns: [
         { key: 'id', label: 'Member ID' },
         { key: 'name', label: 'Name' },
@@ -260,21 +407,23 @@ export function initAdminOverviewPage() {
       regTableHost,
     ]);
 
+    const banner = liveSummary
+      ? null
+      : createAlert({
+          variant: 'info',
+          title: 'Development Preview Mode',
+          message: 'Overview metrics reflect read-only development fixtures until Supabase backend credentials are configured.',
+        });
+
     host.append(
-      createAlert({
-        variant: 'info',
-        title: 'Development Preview Mode',
-        message: 'Overview metrics reflect read-only development fixtures until Phase 2B/Supabase Edge Functions connect.',
-      }),
-      kpiGrid,
-      el('div', { className: 'admin-overview-split' }, [chartCard, txCard]),
-      regCard,
+      ...[banner, kpiGrid, el('div', { className: 'admin-overview-split' }, [chartCard, txCard]), regCard].filter(Boolean),
     );
   };
 
   qs('#overview-range-select')?.addEventListener('change', (e) => {
     store.setState({ range: e.target.value });
-    render();
+    if (isSupabaseConfigured()) loadLiveOverview();
+    else render();
   });
 
   for (const btn of document.querySelectorAll('[data-admin-state]')) {
@@ -288,6 +437,9 @@ export function initAdminOverviewPage() {
   }
 
   render();
+  if (isSupabaseConfigured()) {
+    loadLiveOverview();
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -370,12 +522,13 @@ export function initAdminCustomersPage() {
   }
 
   const store = createStore({
+    allCustomers: [],
     query: initialQuery,
     status: 'all',
     programme: 'all',
     sortBy: 'joined-desc',
     page: 1,
-    loading: false,
+    loading: true,
   });
 
   mountAdminShell({
@@ -388,10 +541,10 @@ export function initAdminCustomersPage() {
   });
 
   const render = () => {
-    const { query, status, programme, sortBy, page, loading } = store.getState();
+    const { allCustomers, query, status, programme, sortBy, page, loading } = store.getState();
     const q = query.trim().toLowerCase();
 
-    let rows = ADMIN_DEV_FIXTURE.customers.filter((c) => {
+    let rows = allCustomers.filter((c) => {
       const matchesQ =
         !q ||
         c.id.toLowerCase().includes(q) ||
@@ -495,16 +648,16 @@ export function initAdminCustomersPage() {
 
   qs('#add-customer-btn')?.addEventListener('click', () => {
     openModal({
-      title: 'Add Loyalty Customer (Phase 2B)',
+      title: 'Customer Self-Registration',
       body: el('p', {
         className: 'text-sm text-muted',
-        text: 'Staff-assisted customer onboarding creates verified Supabase Auth + profile records via an authenticated Edge Function in Phase 2B.',
+        text: 'Loyalty members self-register at /register so email verification, unique membership IDs, and opaque QR tokens are provisioned automatically via Supabase Authentication.',
       }),
       footerActions: [
         el('button', {
           type: 'button',
           className: 'btn btn--primary btn--sm',
-          text: 'Got It',
+          text: 'Close',
           onClick: closeModal,
         }),
       ],
@@ -512,6 +665,16 @@ export function initAdminCustomersPage() {
   });
 
   render();
+  fetchAdminCustomers().then((res) => {
+    store.setState({
+      loading: false,
+      allCustomers: res.ok ? res.rows || [] : [],
+    });
+    if (!res.ok) {
+      showToast({ message: res.message || 'Unable to load customer directory.', variant: 'danger' });
+    }
+    render();
+  });
 }
 
 /* --------------------------------------------------------------------------
@@ -525,9 +688,10 @@ export function initAdminLoyaltyPage() {
   mountAdminShell({ activeId: 'loyalty' });
 
   const store = createStore({
-    selectedId: ADMIN_DEV_FIXTURE.programmes[0].id,
+    programmes: [],
+    selectedId: '',
     isCreatingNew: false,
-    draftTiers: [...ADMIN_DEV_FIXTURE.programmes[0].tiers],
+    draftTiers: [],
   });
 
   const editorTitle = qs('#programme-editor-title');
@@ -634,9 +798,14 @@ export function initAdminLoyaltyPage() {
 
   function renderProgrammeList() {
     clearElement(listHost);
-    const { selectedId } = store.getState();
+    const { programmes, selectedId } = store.getState();
 
-    for (const prog of ADMIN_DEV_FIXTURE.programmes) {
+    if (programmes.length === 0) {
+      listHost.appendChild(el('p', { className: 'text-xs text-muted', text: 'No loyalty programmes found.' }));
+      return;
+    }
+
+    for (const prog of programmes) {
       const btn = el(
         'button',
         {
@@ -684,13 +853,14 @@ export function initAdminLoyaltyPage() {
   });
 
   qs('#cancel-programme-btn')?.addEventListener('click', () => {
-    populateEditor(ADMIN_DEV_FIXTURE.programmes[0], false);
+    const first = store.getState().programmes[0];
+    if (first) populateEditor(first, false);
   });
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     clearElement(statusRegion);
-    const { valid, values } = validateForm(form);
+    const { valid } = validateForm(form);
     if (!valid) {
       statusRegion.appendChild(
         createAlert({
@@ -706,24 +876,59 @@ export function initAdminLoyaltyPage() {
     setButtonLoading(submitBtn, true, 'Saving...');
 
     try {
+      const { selectedId, isCreatingNew, draftTiers } = store.getState();
       const res = await saveLoyaltyProgramme({
-        ...values,
-        tiers: store.getState().draftTiers,
+        id: isCreatingNew ? '' : selectedId,
+        name: nameInput.value,
+        status: statusSelect.value,
+        description: descInput.value,
+        stampGoal: Number(goalInput.value),
+        qualifyingAmountInr: Number(amountInput.value),
+        calculationRule: ruleSelect.value,
+        stampValidityMonths: Number(stampValidityInput.value),
+        rewardValidityMonths: Number(rewardValidityInput.value),
+        eligibility: eligibilityInput.value,
+        tiers: draftTiers,
       });
       if (!res.ok) {
         statusRegion.appendChild(
           createAlert({
             variant: 'warning',
-            title: 'Database Save Pending (Phase 2B)',
+            title: 'Save Failed',
             message: res.message,
           }),
         );
         showToast({ message: res.message, variant: 'warning' });
+      } else {
+        statusRegion.appendChild(
+          createAlert({
+            variant: 'success',
+            title: 'Programme Saved',
+            message: res.message,
+          }),
+        );
+        showToast({ message: res.message, variant: 'success' });
+        const reload = await fetchAdminProgrammes();
+        if (reload.ok && Array.isArray(reload.rows)) {
+          store.setState({ programmes: reload.rows });
+          renderProgrammeList();
+        }
       }
     } finally {
       setButtonLoading(submitBtn, false);
     }
   });
 
-  populateEditor(ADMIN_DEV_FIXTURE.programmes[0], false);
+  fetchAdminProgrammes().then((res) => {
+    const rows = res.ok && Array.isArray(res.rows) ? res.rows : [];
+    store.setState({ programmes: rows });
+    if (rows[0]) {
+      populateEditor(rows[0], false);
+    } else {
+      renderProgrammeList();
+      if (!res.ok) {
+        showToast({ message: res.message || 'Unable to load loyalty programmes.', variant: 'danger' });
+      }
+    }
+  });
 }

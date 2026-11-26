@@ -5,7 +5,10 @@
  * account menu, mobile drawer, and logout flow across all admin pages.
  */
 import { clearElement, el } from '../core/dom.js';
+import { isProductionEnvironment, isSupabaseConfigured } from '../core/config.js';
 import { createIcon } from '../core/icons.js';
+import { supabaseAuth } from '../core/supabaseClient.js';
+import { clearCachedStaffContext, getCachedStaffContext } from '../services/authService.js';
 import { confirmModal, openModal, closeModal } from './modal.js';
 import { showToast } from './toast.js';
 
@@ -13,45 +16,60 @@ export const ADMIN_NAV_GROUPS = Object.freeze([
   {
     group: 'Core',
     items: [
-      { id: 'overview', label: 'Overview', icon: 'home', href: 'dashboard.html', ready: true },
-      { id: 'customers', label: 'Customers', icon: 'users', href: 'customers.html', ready: true },
-      { id: 'loyalty', label: 'Loyalty Programmes', icon: 'gift', href: 'loyalty.html', ready: true },
+      { id: 'overview', label: 'Overview', icon: 'home', href: 'dashboard.html', ready: true, permission: null },
+      { id: 'customers', label: 'Customers', icon: 'users', href: 'customers.html', ready: true, permission: 'customers.read' },
+      { id: 'loyalty', label: 'Loyalty Programmes', icon: 'gift', href: 'loyalty.html', ready: true, permission: 'programmes.manage' },
     ],
   },
   {
     group: 'POS & Ledger',
     items: [
-      { id: 'qr-scanner', label: 'QR Scanner', icon: 'qr-code', href: 'scanner.html', ready: true },
-      { id: 'stamps', label: 'Stamp Transactions', icon: 'stamp', href: 'stamps.html', ready: true },
-      { id: 'rewards', label: 'Rewards', icon: 'award', href: 'rewards.html', ready: true },
-      { id: 'redemptions', label: 'Redemptions', icon: 'tag', href: 'redemptions.html', ready: true },
-      { id: 'purchases', label: 'Purchase Records', icon: 'receipt', href: 'purchases.html', ready: true },
+      { id: 'qr-scanner', label: 'QR Scanner', icon: 'qr-code', href: 'scanner.html', ready: true, permission: 'stamps.issue' },
+      { id: 'stamps', label: 'Stamp Transactions', icon: 'stamp', href: 'stamps.html', ready: true, permission: 'stamps.read' },
+      { id: 'rewards', label: 'Rewards', icon: 'award', href: 'rewards.html', ready: true, permission: 'rewards.manage' },
+      { id: 'redemptions', label: 'Redemptions', icon: 'tag', href: 'redemptions.html', ready: true, permission: 'redemptions.verify' },
+      { id: 'purchases', label: 'Purchase Records', icon: 'receipt', href: 'purchases.html', ready: true, permission: 'purchases.read' },
     ],
   },
   {
     group: 'Engagement',
     items: [
-      { id: 'staff', label: 'Staff Management', icon: 'shield-check', href: 'staff.html', ready: true },
-      { id: 'campaigns', label: 'Campaigns', icon: 'megaphone', href: 'campaigns.html', ready: true },
-      { id: 'surveys', label: 'Surveys', icon: 'clipboard-list', href: 'surveys.html', ready: true },
+      { id: 'staff', label: 'Staff Management', icon: 'shield-check', href: 'staff.html', ready: true, permission: 'staff.manage' },
+      { id: 'campaigns', label: 'Campaigns', icon: 'megaphone', href: 'campaigns.html', ready: true, permission: 'campaigns.manage' },
+      { id: 'surveys', label: 'Surveys', icon: 'clipboard-list', href: 'surveys.html', ready: true, permission: 'surveys.manage' },
     ],
   },
   {
     group: 'Insights & System',
     items: [
-      { id: 'analytics', label: 'Analytics', icon: 'bar-chart', href: 'analytics.html', ready: true },
-      { id: 'reports', label: 'Reports', icon: 'file-text', href: 'reports.html', ready: true },
-      { id: 'settings', label: 'Settings', icon: 'settings', href: 'settings.html', ready: true },
+      { id: 'analytics', label: 'Analytics', icon: 'bar-chart', href: 'analytics.html', ready: true, permission: 'analytics.view' },
+      { id: 'reports', label: 'Reports', icon: 'file-text', href: 'reports.html', ready: true, permission: 'reports.export' },
+      { id: 'settings', label: 'Settings', icon: 'settings', href: 'settings.html', ready: true, permission: 'settings.manage' },
     ],
   },
 ]);
 
+export function canStaffAccessNavItem(item, staffContext = null) {
+  if (!staffContext) return true; // Development preview mode shows complete navigation
+  if (!item?.permission) return true;
+  const perms = Array.isArray(staffContext.permissions) ? staffContext.permissions : [];
+  return perms.includes(item.permission);
+}
+
+export function getVisibleAdminNavGroups(staffContext = getCachedStaffContext()) {
+  if (!staffContext) return ADMIN_NAV_GROUPS;
+  return ADMIN_NAV_GROUPS.map((grp) => ({
+    ...grp,
+    items: grp.items.filter((item) => canStaffAccessNavItem(item, staffContext)),
+  })).filter((grp) => grp.items.length > 0);
+}
+
 function openUpcomingModuleModal(item) {
   openModal({
-    title: `${item.label} — Phase 2B Module`,
+    title: `${item.label} — Access Restricted`,
     body: el('p', {
       className: 'text-sm text-muted',
-      text: `The "${item.label}" console module is wired in the sidebar navigation and scheduled for Phase 2B implementation.`,
+      text: `The "${item.label}" console module is currently disabled or restricted for your account.`,
     }),
     footerActions: [
       el('button', {
@@ -72,19 +90,22 @@ async function handleAdminLogout() {
     cancelLabel: 'Cancel',
   });
   if (confirmed) {
-    window.location.href = 'login.html';
+    clearCachedStaffContext();
+    await supabaseAuth.signOut();
+    window.location.href = 'login.html?reason=signed_out';
   }
 }
 
-function buildSidebarInner(activeId, onItemNavigate) {
+function buildSidebarInner(activeId, onItemNavigate, staffContext = getCachedStaffContext()) {
   const header = el('div', { className: 'admin-sidebar__header' }, [
     el('a', { href: '../index.html', className: 'brand-wordmark', style: 'font-size: 1.15rem;', text: 'BONFREE-HUB' }),
     el('div', { className: 'admin-sidebar__sub', text: 'LOYALTY PLATFORM' }),
   ]);
 
   const groupsWrap = el('div', { className: 'admin-sidebar__groups' });
+  const visibleGroups = getVisibleAdminNavGroups(staffContext);
 
-  for (const grp of ADMIN_NAV_GROUPS) {
+  for (const grp of visibleGroups) {
     const list = el(
       'div',
       { className: 'admin-nav-list' },
@@ -226,28 +247,39 @@ export function mountAdminShell({ activeId = 'overview', onGlobalSearch = null }
       type: 'button',
       className: 'btn btn--icon btn--outline-muted',
       'aria-label': 'View notifications',
-      onClick: () =>
+      onClick: () => {
+        const liveConnected = isSupabaseConfigured();
         openModal({
           title: 'Admin Notifications',
           body: el('div', { className: 'stack' }, [
-            el('div', { className: 'alert alert--info' }, [
-              createIcon('info', { size: 16 }),
-              el('span', { className: 'text-xs', text: 'Development preview: 3 new customer signups in Classic Stamps today.' }),
-            ]),
-            el('div', { className: 'alert alert--warning' }, [
-              createIcon('alert-circle', { size: 16 }),
-              el('span', { className: 'text-xs', text: 'Backend sync pending: connect Supabase in Phase 2B for live alerts.' }),
+            el('div', { className: `alert ${liveConnected ? 'alert--success' : 'alert--warning'}` }, [
+              createIcon(liveConnected ? 'check-circle' : 'alert-circle', { size: 16 }),
+              el('span', {
+                className: 'text-xs',
+                text: liveConnected
+                  ? 'Backend connected: all loyalty transactions, voucher verifications, and audit events are recorded in Supabase.'
+                  : 'Supabase connection not detected. Configure PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY for live operations.',
+              }),
             ]),
           ]),
-        }),
+        });
+      },
     },
     [createIcon('bell', { size: 17 })],
   );
 
+  const staffCtx = getCachedStaffContext();
+  const displayName = staffCtx?.full_name || (isProductionEnvironment() ? 'Staff Member' : 'Admin Console (Local Dev)');
+  const displaySub = staffCtx
+    ? `${staffCtx.role_name || staffCtx.role_code} · ${staffCtx.staff_code}`
+    : isProductionEnvironment()
+      ? 'Sign in required'
+      : 'care@bonfree-hub.in';
+
   const accountMenu = el('div', { className: 'admin-account-menu', hidden: true }, [
     el('div', { style: 'padding: 0.4rem 0.75rem; border-bottom: 1px solid var(--border-subtle);' }, [
-      el('div', { className: 'text-xs', style: 'font-weight: 600;', text: 'Admin Console (Preview)' }),
-      el('div', { className: 'text-xs text-muted', text: 'admin@bonfree-hub.in' }),
+      el('div', { className: 'text-xs', style: 'font-weight: 600;', text: displayName }),
+      el('div', { className: 'text-xs text-muted', text: displaySub }),
     ]),
     el(
       'button',
@@ -256,7 +288,12 @@ export function mountAdminShell({ activeId = 'overview', onGlobalSearch = null }
         className: 'admin-account-menu__item',
         onClick: () => {
           accountMenu.hidden = true;
-          showToast({ message: 'Account & RBAC settings activate in Phase 2B.', variant: 'info' });
+          showToast({
+            message: staffCtx
+              ? `Signed in as ${displayName} (${staffCtx.role_name || staffCtx.role_code}).`
+              : 'Role permissions enforce server-side via Supabase RLS and Edge Functions.',
+            variant: 'info',
+          });
         },
       },
       [createIcon('user', { size: 14 }), el('span', { text: 'Staff Profile' })],
@@ -289,7 +326,7 @@ export function mountAdminShell({ activeId = 'overview', onGlobalSearch = null }
     },
     [
       createIcon('user', { size: 14 }),
-      el('span', { text: 'Admin' }),
+      el('span', { text: staffCtx?.staff_code || 'Admin' }),
       createIcon('chevron-down', { size: 13 }),
     ],
   );

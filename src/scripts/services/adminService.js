@@ -6,7 +6,16 @@
  * - All balance-changing, customer-creating, and programme-saving actions remain read-only/uncommitted
  *   until Phase 2B/Supabase Edge Functions and PostgreSQL RLS are wired.
  */
-import { isSupabaseConfigured } from '../core/config.js';
+import { isProductionEnvironment, isSupabaseConfigured } from '../core/config.js';
+import {
+  invokeEdgeFunction,
+  restInsert,
+  restRpc,
+  restSelect,
+  restUpdate,
+  supabaseAuth,
+} from '../core/supabaseClient.js';
+import { isProgrammeCurrentlyValid } from './loyaltyService.js';
 
 export const ADMIN_DEV_FIXTURE = Object.freeze({
   isDevelopmentFixture: true,
@@ -76,6 +85,7 @@ export const ADMIN_DEV_FIXTURE = Object.freeze({
   customers: Object.freeze([
     {
       id: 'BF-001248',
+      qrToken: 'BFQR-001248A9C4E2',
       name: 'Aanya Sharma',
       email: 'aanya.sharma@bonfree-member.dev',
       phone: '+91 98765 43210',
@@ -102,6 +112,7 @@ export const ADMIN_DEV_FIXTURE = Object.freeze({
     },
     {
       id: 'BF-011234',
+      qrToken: 'BFQR-011234B7E105',
       name: 'Ishaan Mehta',
       email: 'ishaan.mehta@example.dev',
       phone: '+91 98111 66789',
@@ -115,6 +126,7 @@ export const ADMIN_DEV_FIXTURE = Object.freeze({
     },
     {
       id: 'BF-011009',
+      qrToken: 'BFQR-011009C4D819',
       name: 'Kavya Iyer',
       email: 'kavya.iyer@example.dev',
       phone: '+91 98990 22446',
@@ -345,68 +357,116 @@ export const ADMIN_DEV_FIXTURE = Object.freeze({
   rewardsCatalog: Object.freeze([
     {
       id: 'rw-fixed-500',
+      code: 'RW-500-OFF',
+      programmeId: 'prog-classic',
+      programmeName: 'Classic Stamps',
       title: '₹500 Off Store Voucher',
       type: 'Fixed Discount',
       valueLabel: '₹500 Off',
+      discountAmountInr: 500,
+      discountPercent: null,
       description: '₹500 off on streetwear & everyday fashion purchases of ₹2,000 or above.',
       requiredStamps: 10,
       validityMonths: 6,
+      redemptionLimitPerMember: 4,
       redemptionLimit: '1 per card completion',
+      eligibilityRule: 'Active Classic Stamps members with >= 10 stamps',
+      eligibilityConfig: {},
       status: 'Active',
     },
     {
       id: 'rw-fixed-1000',
+      code: 'RW-1000-OFF',
+      programmeId: 'prog-classic',
+      programmeName: 'Classic Stamps',
       title: '₹1,000 Denim & Cargo Credit',
       type: 'Fixed Discount',
       valueLabel: '₹1,000 Off',
+      discountAmountInr: 1000,
+      discountPercent: null,
       description: '₹1,000 off on baggy jeans, wide cargo pants, and layered outerwear.',
       requiredStamps: 20,
       validityMonths: 6,
+      redemptionLimitPerMember: 2,
       redemptionLimit: '1 per member / quarter',
+      eligibilityRule: 'Active members with >= 20 stamps',
+      eligibilityConfig: {},
       status: 'Active',
     },
     {
       id: 'rw-pct-15',
+      code: 'RW-15PCT',
+      programmeId: 'prog-classic',
+      programmeName: 'Classic Stamps',
       title: 'Streetwear Insider — 15% Off',
       type: 'Percentage Discount',
       valueLabel: '15% Off',
+      discountAmountInr: null,
+      discountPercent: 15,
       description: '15% off (up to ₹2,500) on oversized tees, boxy shirts, cargos, and jackets.',
       requiredStamps: 15,
       validityMonths: 3,
+      redemptionLimitPerMember: 2,
       redemptionLimit: '2 per member / year',
+      eligibilityRule: 'Active members with >= 15 stamps',
+      eligibilityConfig: {},
       status: 'Active',
     },
     {
       id: 'rw-free-tee',
+      code: 'RW-FREE-TEE',
+      programmeId: 'prog-classic',
+      programmeName: 'Classic Stamps',
       title: 'Complimentary Graphic Tee',
       type: 'Free Product',
       valueLabel: 'Free Heavyweight Tee',
+      discountAmountInr: null,
+      discountPercent: null,
       description: 'Redeem 1 complimentary seasonal monochrome graphic tee from our core drop.',
       requiredStamps: 25,
       validityMonths: 6,
+      redemptionLimitPerMember: 1,
       redemptionLimit: '1 per member',
+      eligibilityRule: 'Members with >= 25 stamps',
+      eligibilityConfig: {},
       status: 'Active',
     },
     {
       id: 'rw-birthday',
+      code: 'RW-BIRTHDAY',
+      programmeId: null,
+      programmeName: 'All Active Programmes',
       title: 'Birthday Month Streetwear Perk',
       type: 'Birthday Reward',
       valueLabel: '₹750 Birthday Credit',
+      discountAmountInr: 750,
+      discountPercent: null,
       description: 'Celebrate your birthday month with ₹750 credit + priority fitting support.',
       requiredStamps: 5,
       validityMonths: 1,
+      redemptionLimitPerMember: 1,
       redemptionLimit: 'Once per year (birth month)',
+      eligibilityRule: 'Members celebrating their birth month',
+      eligibilityConfig: { birthday_month_only: true },
       status: 'Active',
     },
     {
       id: 'rw-early-drop',
+      code: 'RW-EARLY-DROP',
+      programmeId: 'prog-premium',
+      programmeName: 'Premium Circle',
       title: 'Early Access to New Drops',
       type: 'Exclusive Member Offer',
       valueLabel: '48h Drop Preview',
+      discountAmountInr: null,
+      discountPercent: null,
       description: 'Be first to shop limited streetwear capsules, denim washes, and collabs.',
       requiredStamps: 10,
       validityMonths: 12,
+      redemptionLimitPerMember: null,
       redemptionLimit: 'Unlimited while active',
+      eligibilityRule: 'Premium Circle members (>= 10 lifetime stamps)',
+      eligibilityConfig: { min_lifetime_stamps: 10 },
       status: 'Inactive',
     },
   ]),
@@ -502,7 +562,8 @@ export function calculateEligibleStamps({
 }
 
 /**
- * Looks up a customer by Membership ID, email, or phone in dev fixture (Supabase RPC in Phase 3).
+ * Looks up a customer by opaque QR token (`BFQR-...`), Membership ID, email, or phone in dev fixture.
+ * Strictly identifies membership; never authorizes stamp awards or redemptions.
  */
 export function lookupCustomerForScanner(query = '') {
   const q = query.trim().toLowerCase();
@@ -511,6 +572,7 @@ export function lookupCustomerForScanner(query = '') {
 
   const match = ADMIN_DEV_FIXTURE.customers.find(
     (c) =>
+      (c.qrToken && c.qrToken.toLowerCase() === q) ||
       c.id.toLowerCase() === q ||
       c.email.toLowerCase() === q ||
       c.phone.toLowerCase().replace(/\s+/g, '').includes(cleanedPhone) ||
@@ -525,90 +587,498 @@ export function lookupCustomerForScanner(query = '') {
 }
 
 /**
- * Invokes `issue-stamp` Edge Function when connected.
- * Checks duplicate receipt references cleanly and never mutates local stamp balances.
+ * Live staff-only member lookup via PostgreSQL `fn_lookup_member_by_qr_or_query`.
  */
-export async function awardStampsForPurchase({
-  customerId,
-  purchaseRef,
-  amountInr,
-  calculatedStamps,
-}) {
-  if (!customerId || !purchaseRef || !amountInr) {
-    return {
-      ok: false,
-      code: 'VALIDATION_ERROR',
-      message: 'Customer, purchase reference, and purchase amount are required.',
-    };
-  }
-
-  const normalizedRef = purchaseRef.trim().toUpperCase();
-  const duplicate = ADMIN_DEV_FIXTURE.stampTransactions.find(
-    (tx) => tx.purchaseRef.toUpperCase() === normalizedRef,
-  );
-  if (duplicate) {
-    return {
-      ok: false,
-      code: 'DUPLICATE_RECEIPT',
-      message: `Duplicate purchase reference detected: ${normalizedRef} was already processed on ${duplicate.dateTime} (${duplicate.id}).`,
-    };
-  }
-
-  if (Number(calculatedStamps) <= 0) {
-    return {
-      ok: false,
-      code: 'NOT_QUALIFYING',
-      message: 'Purchase amount does not meet the minimum qualifying threshold for a stamp.',
-    };
-  }
+export async function lookupMemberLive(query = '') {
+  const q = String(query || '').trim();
+  if (!q) return { ok: false, code: 'VALIDATION_ERROR', message: 'Enter a QR token, ID, email, or phone.' };
 
   if (!isSupabaseConfigured()) {
-    return {
-      ok: false,
-      code: 'SUPABASE_NOT_CONFIGURED',
-      message:
-        'Stamp award request validated, but ledger credits require the Phase 3 Supabase Edge Function (`issue-stamp`). No client balance was modified.',
-    };
+    if (isProductionEnvironment()) {
+      return { ok: false, code: 'SUPABASE_NOT_CONFIGURED', message: 'Live Supabase connection is required in production.' };
+    }
+    const devMatch = lookupCustomerForScanner(q);
+    if (!devMatch) {
+      return { ok: false, code: 'INVALID_QR_OR_MEMBER', message: 'Invalid QR identifier or unknown member.' };
+    }
+    return { ok: true, source: 'development-fixture', ...devMatch };
   }
 
+  const res = await restRpc('fn_lookup_member_by_qr_or_query', { p_query: q });
+  if (!res.ok) return res;
+  if (!res.data) {
+    return { ok: false, code: 'INVALID_QR_OR_MEMBER', message: 'Invalid QR identifier or unknown member.' };
+  }
+
+  const cards = Array.isArray(res.data.cards) ? res.data.cards : [];
+  const activeCard = cards.find((c) => c.is_programme_valid) || cards[0] || null;
   return {
-    ok: false,
-    code: 'SERVICE_PENDING',
-    message: 'Live `issue-stamp` Edge Function integration activates in Phase 3.',
+    ok: true,
+    source: 'supabase-live',
+    customer: {
+      id: res.data.membership_id,
+      uuid: res.data.customer_id,
+      qrToken: res.data.qr_token,
+      name: res.data.full_name,
+      email: res.data.email,
+      phone: res.data.phone || '',
+      stamps: activeCard ? activeCard.current_stamps : 0,
+      status: res.data.status === 'active' ? 'Active' : 'Inactive',
+    },
+    programme: activeCard
+      ? {
+          id: activeCard.programme_id,
+          name: activeCard.programme_name,
+          status: activeCard.programme_status,
+          isValidNow: activeCard.is_programme_valid,
+          stampGoal: activeCard.stamp_goal,
+          qualifyingAmountInr: activeCard.qualifying_amount_inr,
+          calculationRule: activeCard.calculation_rule,
+        }
+      : ADMIN_DEV_FIXTURE.programmes[0],
   };
 }
 
-export async function saveRewardDefinition(payload) {
-  if (!payload?.title) {
-    return { ok: false, code: 'VALIDATION_ERROR', message: 'Reward title is required.' };
+/**
+ * Invokes `issue-stamp` Edge Function when connected.
+ * Never sends or trusts a frontend stamp count; uses `idempotencyKey` for safe retry protection.
+ */
+export async function awardStampsForPurchase({
+  customerId,
+  customerUuid = null,
+  qrToken = null,
+  programmeId = null,
+  purchaseRef,
+  amountInr,
+  itemsSummary = '',
+  idempotencyKey = '',
+  calculatedStamps = null,
+  programme = null,
+}) {
+  if ((!customerId && !customerUuid && !qrToken) || !purchaseRef || !amountInr || Number(amountInr) <= 0) {
+    return {
+      ok: false,
+      code: 'VALIDATION_ERROR',
+      message: 'Customer, purchase reference, and a positive purchase amount are required.',
+    };
   }
+
+  if (programme && !isProgrammeCurrentlyValid(programme)) {
+    return {
+      ok: false,
+      code: 'PROGRAMME_EXPIRED_OR_INACTIVE',
+      message: `Cannot award stamps: programme "${programme.name}" is inactive or expired.`,
+    };
+  }
+
+  if (!isSupabaseConfigured()) {
+    const normalizedRef = purchaseRef.trim().toUpperCase();
+    const duplicate = ADMIN_DEV_FIXTURE.stampTransactions.find(
+      (tx) => tx.purchaseRef.toUpperCase() === normalizedRef,
+    );
+    if (duplicate) {
+      return {
+        ok: false,
+        code: 'DUPLICATE_RECEIPT',
+        message: `Duplicate purchase reference detected: ${normalizedRef} was already processed on ${duplicate.dateTime} (${duplicate.id}).`,
+      };
+    }
+
+    if (calculatedStamps !== null && Number(calculatedStamps) <= 0) {
+      return {
+        ok: false,
+        code: 'NOT_QUALIFYING',
+        message: 'Purchase amount does not meet the minimum qualifying threshold for a stamp.',
+      };
+    }
+
+    return {
+      ok: false,
+      code: 'SUPABASE_NOT_CONFIGURED',
+      message:
+        'Stamp award request validated, but ledger credits require the Supabase Edge Function (`issue-stamp`). No client balance was modified.',
+    };
+  }
+
+  // Note: calculatedStamps is NEVER transmitted to the Edge Function; the backend computes stamps authoritatively.
+  const edgeRes = await invokeEdgeFunction('issue-stamp', {
+    customerUuid,
+    qrToken,
+    programmeId,
+    receiptNo: String(purchaseRef).trim(),
+    amountInr: Number(amountInr),
+    itemsSummary: String(itemsSummary || '').trim(),
+    idempotencyKey: idempotencyKey || undefined,
+  });
+
+  if (!edgeRes.ok) return edgeRes;
+
+  return {
+    ok: true,
+    idempotentReplay: Boolean(edgeRes.data?.idempotentReplay),
+    result: edgeRes.data?.result ?? edgeRes.data ?? null,
+  };
+}
+
+/**
+ * Fetches stamp transactions from RLS-protected Supabase tables (or dev fixture when unconfigured).
+ */
+export async function fetchStampTransactions() {
+  if (!isSupabaseConfigured()) {
+    if (isProductionEnvironment()) {
+      return { ok: false, code: 'SUPABASE_NOT_CONFIGURED', message: 'Live Supabase connection is required in production.', rows: [] };
+    }
+    return {
+      ok: true,
+      source: 'development-fixture',
+      rows: ADMIN_DEV_FIXTURE.stampTransactions,
+    };
+  }
+
+  const res = await restSelect(
+    'stamp_transactions',
+    'select=id,transaction_code,tx_type,stamps_delta,balance_after,status,created_at,notes,customers(membership_id,profiles(full_name,phone)),staff(staff_code),purchases(receipt_no,amount_inr,stores(name)),loyalty_programmes(name)&order=created_at.desc&limit=100',
+  );
+
+  if (!res.ok) return res;
+
+  const rows = (res.data || []).map((tx) => {
+    const d = new Date(tx.created_at);
+    return {
+      id: tx.transaction_code || tx.id,
+      isoDate: Number.isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10),
+      dateTime: Number.isNaN(d.getTime())
+        ? tx.created_at
+        : d.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      customerId: tx.customers?.membership_id || '—',
+      customerName: tx.customers?.profiles?.full_name || 'Member',
+      customerPhone: tx.customers?.profiles?.phone || '—',
+      staffId: tx.staff?.staff_code || 'SYSTEM',
+      staffName: tx.staff?.staff_code || 'System',
+      store: tx.purchases?.stores?.name || 'Flagship Store',
+      purchaseRef: tx.purchases?.receipt_no || '—',
+      amountInr: Number(tx.purchases?.amount_inr || 0),
+      stampsAwarded: Number(tx.stamps_delta || 0),
+      programme: tx.loyalty_programmes?.name || 'Classic Stamps',
+      status: tx.status ? tx.status.charAt(0).toUpperCase() + tx.status.slice(1) : 'Awarded',
+    };
+  });
+
+  return { ok: true, source: 'supabase-live', rows };
+}
+
+/**
+ * Fetches loyalty rewards catalogue and programme options from Supabase (or read-only dev fixture).
+ */
+export async function fetchAdminRewards() {
+  if (!isSupabaseConfigured()) {
+    if (isProductionEnvironment()) {
+      return { ok: false, code: 'SUPABASE_NOT_CONFIGURED', message: 'Live Supabase connection is required in production.', rewards: [], programmes: [] };
+    }
+    return {
+      ok: true,
+      source: 'development-fixture',
+      rewards: ADMIN_DEV_FIXTURE.rewardsCatalog,
+      programmes: ADMIN_DEV_FIXTURE.programmes,
+    };
+  }
+
+  const [rewardsRes, progsRes] = await Promise.all([
+    restSelect('rewards', 'select=*,loyalty_programmes(id,name)&order=required_stamps.asc'),
+    restSelect('loyalty_programmes', 'select=id,name,status&order=name.asc'),
+  ]);
+
+  if (!rewardsRes.ok) return rewardsRes;
+
+  const programmes = (progsRes.ok && Array.isArray(progsRes.data) ? progsRes.data : []).map((p) => ({
+    id: p.id,
+    name: p.name,
+    status: p.status === 'active' ? 'Active' : 'Inactive',
+  }));
+
+  const rewards = (rewardsRes.data || []).map((rw) => ({
+    id: rw.id,
+    code: rw.code,
+    programmeId: rw.programme_id || null,
+    programmeName: rw.loyalty_programmes?.name || 'All Active Programmes',
+    title: rw.title,
+    type: rw.reward_type,
+    valueLabel: rw.value_label,
+    discountAmountInr: rw.discount_amount_inr !== null ? Number(rw.discount_amount_inr) : null,
+    discountPercent: rw.discount_percent !== null ? Number(rw.discount_percent) : null,
+    description: rw.description || '',
+    requiredStamps: Number(rw.required_stamps || 1),
+    validityMonths: Number(rw.validity_months || 6),
+    redemptionLimitPerMember: rw.redemption_limit_per_member ?? null,
+    redemptionLimit: rw.redemption_limit_label || '1 per card completion',
+    eligibilityRule: rw.eligibility_rule || 'All active BONFREE-HUB members',
+    eligibilityConfig: rw.eligibility_config || {},
+    status: rw.status === 'active' ? 'Active' : 'Inactive',
+  }));
+
+  return { ok: true, source: 'supabase-live', rewards, programmes };
+}
+
+/**
+ * Creates or updates a reward definition in Supabase (`rewards` table via RLS `rewards.manage`).
+ */
+export async function saveRewardDefinition(payload) {
+  const title = String(payload?.title || '').trim();
+  const rewardType = String(payload?.type || payload?.reward_type || 'Fixed Discount').trim();
+  const valueLabel = String(payload?.valueLabel || payload?.value_label || title).trim();
+  const rawStamps = payload?.requiredStamps ?? payload?.required_stamps;
+  const requiredStamps = rawStamps !== undefined ? Number(rawStamps) : 10;
+  const rawValidity = payload?.validityMonths ?? payload?.validity_months;
+  const validityMonths = rawValidity !== undefined ? Number(rawValidity) : 6;
+  const status = String(payload?.status || 'Active').toLowerCase() === 'inactive' ? 'inactive' : 'active';
+
+  if (!title || !valueLabel || !Number.isInteger(requiredStamps) || requiredStamps <= 0 || !Number.isInteger(validityMonths) || validityMonths <= 0) {
+    return {
+      ok: false,
+      code: 'VALIDATION_ERROR',
+      message: 'Reward title, value label, positive required stamps, and positive validity duration are required.',
+    };
+  }
+
+  const discountAmount =
+    rewardType === 'Fixed Discount' && payload?.discountAmountInr !== undefined && String(payload.discountAmountInr).trim() !== ''
+      ? Number(payload.discountAmountInr)
+      : null;
+  const discountPercent =
+    rewardType === 'Percentage Discount' && payload?.discountPercent !== undefined && String(payload.discountPercent).trim() !== ''
+      ? Number(payload.discountPercent)
+      : null;
+
+  if (discountAmount !== null && (Number.isNaN(discountAmount) || discountAmount < 0)) {
+    return { ok: false, code: 'VALIDATION_ERROR', message: 'Discount amount must be zero or positive.' };
+  }
+  if (discountPercent !== null && (Number.isNaN(discountPercent) || discountPercent <= 0 || discountPercent > 100)) {
+    return { ok: false, code: 'VALIDATION_ERROR', message: 'Discount percentage must be between 1 and 100.' };
+  }
+
+  const limitNumRaw = payload?.redemptionLimitPerMember ?? payload?.redemption_limit_per_member;
+  const redemptionLimitPerMember =
+    limitNumRaw !== undefined && limitNumRaw !== null && String(limitNumRaw).trim() !== ''
+      ? Number(limitNumRaw)
+      : null;
+
+  if (redemptionLimitPerMember !== null && (!Number.isInteger(redemptionLimitPerMember) || redemptionLimitPerMember <= 0)) {
+    return { ok: false, code: 'VALIDATION_ERROR', message: 'Redemption limit count must be a positive whole number.' };
+  }
+
   if (!isSupabaseConfigured()) {
     return {
       ok: false,
       code: 'SUPABASE_NOT_CONFIGURED',
       message:
-        'Reward configuration validated. Saving to PostgreSQL activates with Phase 3 Supabase RLS/Edge Functions.',
+        'Reward configuration validated. Saving to PostgreSQL activates once Supabase backend & admin RBAC are connected.',
     };
   }
-  return { ok: false, code: 'SERVICE_PENDING', message: 'Live reward persistence connects in Phase 3.' };
+
+  const eligibilityConfig = {};
+  if (rewardType === 'Birthday Reward' || payload?.birthdayMonthOnly === true || payload?.birthdayMonthOnly === 'true') {
+    eligibilityConfig.birthday_month_only = true;
+  }
+  const minLife = Number(payload?.minLifetimeStamps || 0);
+  if (Number.isInteger(minLife) && minLife > 0) {
+    eligibilityConfig.min_lifetime_stamps = minLife;
+  }
+
+  const record = {
+    programme_id: payload?.programmeId || null,
+    title,
+    reward_type: rewardType,
+    value_label: valueLabel,
+    discount_amount_inr: discountAmount,
+    discount_percent: discountPercent,
+    description: String(payload?.description || '').trim(),
+    required_stamps: requiredStamps,
+    validity_months: validityMonths,
+    redemption_limit_per_member: redemptionLimitPerMember,
+    redemption_limit_label: String(payload?.redemptionLimit || '1 per card completion').trim(),
+    eligibility_rule: String(payload?.eligibilityRule || 'All active BONFREE-HUB members').trim(),
+    eligibility_config: eligibilityConfig,
+    status,
+  };
+
+  if (payload?.id) {
+    const res = await restUpdate('rewards', `id=eq.${encodeURIComponent(payload.id)}`, record);
+    if (!res.ok) return res;
+    return { ok: true, reward: Array.isArray(res.data) ? res.data[0] : res.data };
+  }
+
+  const nonce =
+    typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID().slice(0, 6).toUpperCase()
+      : Math.random().toString(36).slice(2, 8).toUpperCase();
+
+  const res = await restInsert('rewards', {
+    code: `RW-${nonce}`,
+    ...record,
+  });
+  if (!res.ok) return res;
+  return { ok: true, reward: Array.isArray(res.data) ? res.data[0] : res.data };
 }
 
-export async function processRedemption({ redemptionId, action }) {
-  if (!redemptionId || !action) {
-    return { ok: false, code: 'VALIDATION_ERROR', message: 'Redemption ID and action are required.' };
+/**
+ * Activates or deactivates an existing reward in Supabase.
+ */
+export async function toggleRewardStatus({ rewardId, nextStatus }) {
+  if (!rewardId) {
+    return { ok: false, code: 'VALIDATION_ERROR', message: 'Reward ID is required.' };
+  }
+  const normalized = String(nextStatus || '').toLowerCase() === 'active' ? 'active' : 'inactive';
+  if (!isSupabaseConfigured()) {
+    return {
+      ok: false,
+      code: 'SUPABASE_NOT_CONFIGURED',
+      message: `Reward status change to "${normalized}" requires live Supabase admin connection.`,
+    };
+  }
+  const res = await restUpdate('rewards', `id=eq.${encodeURIComponent(rewardId)}`, { status: normalized });
+  if (!res.ok) return res;
+  return { ok: true, reward: Array.isArray(res.data) ? res.data[0] : res.data };
+}
+
+/**
+ * Fetches redemption queue and voucher history from Supabase (or dev fixture when unconfigured).
+ */
+export async function fetchAdminRedemptions() {
+  if (!isSupabaseConfigured()) {
+    if (isProductionEnvironment()) {
+      return { ok: false, code: 'SUPABASE_NOT_CONFIGURED', message: 'Live Supabase connection is required in production.', rows: [] };
+    }
+    return {
+      ok: true,
+      source: 'development-fixture',
+      rows: ADMIN_DEV_FIXTURE.redemptions,
+    };
+  }
+
+  const res = await restSelect(
+    'redemptions',
+    'select=id,voucher_code,stamps_cost,status,rejection_reason,notes,requested_at,processed_at,customers(membership_id,profiles(full_name,phone)),rewards(title,reward_type,value_label),customer_rewards(expires_at),staff(staff_code)&order=requested_at.desc&limit=150',
+  );
+
+  if (!res.ok) return res;
+
+  const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : 'Pending');
+  const fmtDateTime = (iso) => {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime())
+      ? iso
+      : d.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  };
+  const fmtDate = (iso) => {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime())
+      ? iso
+      : d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
+  const rows = (res.data || []).map((r) => ({
+    id: r.id,
+    requestedOn: fmtDateTime(r.requested_at),
+    isoDate: r.requested_at ? String(r.requested_at).slice(0, 10) : '',
+    voucherCode: r.voucher_code,
+    customerId: r.customers?.membership_id || '—',
+    customerName: r.customers?.profiles?.full_name || 'Member',
+    customerPhone: r.customers?.profiles?.phone || '—',
+    rewardTitle: r.rewards?.title || 'Loyalty Reward',
+    rewardType: r.rewards?.reward_type || '',
+    stampsCost: Number(r.stamps_cost || 0),
+    status: cap(r.status),
+    expiresOn: fmtDate(r.customer_rewards?.expires_at),
+    verifiedBy: r.staff?.staff_code || '—',
+    notes: r.rejection_reason ? `Rejected: ${r.rejection_reason}` : r.notes || 'Ready for checkout verification.',
+  }));
+
+  return { ok: true, source: 'supabase-live', rows };
+}
+
+/**
+ * Verifies a customer voucher code via the `redeem-reward` Edge Function (`mode: 'verify'`).
+ */
+export async function verifyVoucherCode(voucherCode) {
+  const clean = String(voucherCode || '').trim().toUpperCase();
+  if (!clean) {
+    return { ok: false, code: 'VALIDATION_ERROR', message: 'Enter a valid voucher code (e.g. BFH-XXXX-XXXXXX).' };
+  }
+
+  if (!isSupabaseConfigured()) {
+    const match = ADMIN_DEV_FIXTURE.redemptions.find((r) => r.voucherCode.toUpperCase() === clean);
+    if (!match) {
+      return { ok: false, code: 'VOUCHER_NOT_FOUND', message: `No voucher found matching "${clean}".` };
+    }
+    return { ok: true, source: 'development-fixture', voucher: match };
+  }
+
+  const edgeRes = await invokeEdgeFunction('redeem-reward', { mode: 'verify', voucherCode: clean });
+  if (!edgeRes.ok) return edgeRes;
+
+  const v = edgeRes.data?.voucher;
+  if (!v) {
+    return { ok: false, code: 'VOUCHER_NOT_FOUND', message: 'Voucher details could not be loaded.' };
+  }
+
+  const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : 'Pending');
+  const fmtDate = (iso) => {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
+  return {
+    ok: true,
+    source: 'supabase-live',
+    voucher: {
+      id: v.redemption_id,
+      voucherCode: v.voucher_code,
+      customerId: v.customer_id || '—',
+      customerName: v.customer_name || 'Member',
+      customerPhone: v.customer_phone || '—',
+      rewardTitle: v.reward_title || 'Loyalty Reward',
+      rewardType: v.reward_type || '',
+      stampsCost: Number(v.stamps_cost || 0),
+      status: cap(v.status),
+      expiresOn: fmtDate(v.expires_at),
+      notes: v.notes || '',
+    },
+  };
+}
+
+export async function processRedemption({ redemptionId = null, voucherCode = null, action, rejectionReason = '' }) {
+  if ((!redemptionId && !voucherCode) || !action) {
+    return { ok: false, code: 'VALIDATION_ERROR', message: 'Redemption ID or voucher code and action are required.' };
   }
   if (!isSupabaseConfigured()) {
     return {
       ok: false,
       code: 'SUPABASE_NOT_CONFIGURED',
-      message: `Redemption "${action}" request prepared for ${redemptionId}, awaiting Phase 3 Supabase Edge Function (\`redeem-reward\`).`,
+      message: `Redemption "${action}" request prepared for ${voucherCode || redemptionId}, awaiting Supabase Edge Function (\`redeem-reward\`).`,
     };
   }
-  return { ok: false, code: 'SERVICE_PENDING', message: 'Live redemption processing connects in Phase 3.' };
+  const edgeRes = await invokeEdgeFunction('redeem-reward', {
+    mode: action,
+    redemptionId: redemptionId || undefined,
+    voucherCode: voucherCode ? String(voucherCode).trim().toUpperCase() : undefined,
+    rejectionReason: rejectionReason ? String(rejectionReason).trim() : undefined,
+  });
+  if (!edgeRes.ok) return edgeRes;
+  return {
+    ok: true,
+    redemption: edgeRes.data?.redemption ?? edgeRes.data ?? null,
+    message:
+      action === 'confirm'
+        ? `Voucher ${voucherCode || redemptionId} verified and marked Completed.`
+        : `Redemption ${voucherCode || redemptionId} rejected and stamps refunded.`,
+  };
 }
 
 /**
- * Staff authentication interface (Phase 2B/Supabase Auth + staff_members RBAC verification).
+ * Staff authentication interface (Supabase Auth + active staff RBAC verification).
  */
 export async function signInStaff({ email, password }) {
   if (!email || !password) {
@@ -628,15 +1098,173 @@ export async function signInStaff({ email, password }) {
     };
   }
 
+  const res = await supabaseAuth.signInWithPassword({
+    email: String(email).trim().toLowerCase(),
+    password,
+  });
+
+  if (!res.ok) return res;
+
+  const userId = res.data?.user?.id;
+  const staffRes = await restSelect(
+    'staff',
+    `select=id,staff_code,status,roles(code,name)&user_id=eq.${userId}`,
+  );
+
+  if (!staffRes.ok || !Array.isArray(staffRes.data) || staffRes.data.length === 0) {
+    await supabaseAuth.signOut();
+    return {
+      ok: false,
+      code: 'UNAUTHORIZED_STAFF_LOGIN',
+      message: 'Unauthorized: This account does not have staff or administrator access.',
+    };
+  }
+
+  const staffRow = staffRes.data[0];
+  if (staffRow.status !== 'active') {
+    await supabaseAuth.signOut();
+    return {
+      ok: false,
+      code: 'STAFF_ACCOUNT_DEACTIVATED',
+      message: 'Your staff account has been deactivated. Contact an Administrator to restore access.',
+    };
+  }
+
+  return { ok: true, session: res.data, staff: staffRow };
+}
+
+/**
+ * Sends a Supabase password recovery email for a staff work email address.
+ */
+export async function requestStaffPasswordReset({ email }) {
+  const cleanEmail = String(email || '').trim().toLowerCase();
+  if (!cleanEmail || !cleanEmail.includes('@')) {
+    return { ok: false, code: 'VALIDATION_ERROR', message: 'Enter a valid staff work email address.' };
+  }
+  if (!isSupabaseConfigured()) {
+    return {
+      ok: false,
+      code: 'SUPABASE_NOT_CONFIGURED',
+      message: 'Staff password reset emails activate once Supabase Authentication is connected.',
+    };
+  }
+  const redirectTo =
+    typeof window !== 'undefined' ? `${window.location.origin}/reset-password.html` : undefined;
+  const res = await supabaseAuth.resetPasswordForEmail({ email: cleanEmail, redirectTo });
+  if (!res.ok) return res;
   return {
-    ok: false,
-    code: 'AUTH_CLIENT_PENDING',
-    message: 'Staff authentication client connects in Phase 2B.',
+    ok: true,
+    message: 'If an active staff account matches that email, a password setup/reset link has been sent.',
   };
 }
 
 /**
- * Saves or creates a loyalty programme (invokes Edge Function / RLS admin policy once connected).
+ * Generates a deterministic-per-intent idempotency key for safe POS retries.
+ */
+export function createIdempotencyKey(customerKey = '', receiptNo = '') {
+  const cleanCust = String(customerKey || 'cust').replace(/[^a-zA-Z0-9-]/g, '');
+  const cleanRec = String(receiptNo || 'rec').trim().toUpperCase().replace(/[^A-Z0-9-]/g, '');
+  const nonce =
+    typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID().slice(0, 8)
+      : Math.random().toString(36).slice(2, 10);
+  return `idem-${cleanCust}-${cleanRec}-${nonce}`;
+}
+
+/**
+ * Fetches loyalty member directory from RLS-protected Supabase tables (or dev fixture outside production).
+ */
+export async function fetchAdminCustomers() {
+  if (!isSupabaseConfigured()) {
+    if (isProductionEnvironment()) {
+      return { ok: false, code: 'SUPABASE_NOT_CONFIGURED', message: 'Live Supabase connection is required in production.', rows: [] };
+    }
+    return { ok: true, source: 'development-fixture', rows: ADMIN_DEV_FIXTURE.customers };
+  }
+
+  const res = await restSelect(
+    'customers',
+    'select=id,membership_id,status,joined_at,profiles(full_name,email,phone),loyalty_cards(current_stamps,loyalty_programmes(name)),purchases(items_summary,amount_inr,purchased_at)&order=joined_at.desc&limit=200',
+  );
+  if (!res.ok) return res;
+
+  const rows = (res.data || []).map((c) => {
+    const cards = Array.isArray(c.loyalty_cards) ? c.loyalty_cards : [];
+    const primaryCard = cards[0] || null;
+    const purchases = Array.isArray(c.purchases) ? c.purchases : [];
+    const totalSpend = purchases.reduce((sum, p) => sum + Number(p.amount_inr || 0), 0);
+    const joinedDate = c.joined_at ? new Date(c.joined_at) : null;
+    return {
+      uuid: c.id,
+      id: c.membership_id,
+      name: c.profiles?.full_name || 'Member',
+      email: c.profiles?.email || '—',
+      phone: c.profiles?.phone || '—',
+      programme: primaryCard?.loyalty_programmes?.name || 'Classic Stamps',
+      stamps: Number(primaryCard?.current_stamps || 0),
+      status: c.status === 'active' ? 'Active' : 'Inactive',
+      joinedOn:
+        joinedDate && !Number.isNaN(joinedDate.getTime())
+          ? joinedDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+          : '—',
+      totalSpendInr: totalSpend,
+      rewardsRedeemed: 0,
+      recentPurchases: purchases.slice(0, 4).map(
+        (p) => `${p.items_summary || 'Store purchase'} (₹${Number(p.amount_inr || 0).toLocaleString('en-IN')})`,
+      ),
+    };
+  });
+
+  return { ok: true, source: 'supabase-live', rows };
+}
+
+/**
+ * Fetches loyalty programmes and tiers from Supabase (or dev fixture outside production).
+ */
+export async function fetchAdminProgrammes() {
+  if (!isSupabaseConfigured()) {
+    if (isProductionEnvironment()) {
+      return { ok: false, code: 'SUPABASE_NOT_CONFIGURED', message: 'Live Supabase connection is required in production.', rows: [] };
+    }
+    return { ok: true, source: 'development-fixture', rows: ADMIN_DEV_FIXTURE.programmes };
+  }
+
+  const res = await restSelect(
+    'loyalty_programmes',
+    'select=id,code,name,subtitle,description,status,stamp_goal,qualifying_amount_inr,calculation_rule,stamp_validity_months,reward_validity_months,eligibility_rule,loyalty_programme_tiers(id,stamps_required,title,reward_value)&order=created_at.asc',
+  );
+  if (!res.ok) return res;
+
+  const rows = (res.data || []).map((p) => ({
+    id: p.id,
+    code: p.code,
+    name: p.name,
+    subtitle: p.subtitle || 'Spend · Collect · Redeem',
+    description: p.description || '',
+    status: p.status === 'active' ? 'Active' : 'Inactive',
+    stampGoal: Number(p.stamp_goal || 10),
+    qualifyingAmountInr: Number(p.qualifying_amount_inr || 1000),
+    calculationRule: p.calculation_rule || 'per_threshold',
+    stampValidityMonths: Number(p.stamp_validity_months || 12),
+    rewardValidityMonths: Number(p.reward_validity_months || 6),
+    eligibility: p.eligibility_rule || 'All active loyalty club members',
+    tiers: Array.isArray(p.loyalty_programme_tiers)
+      ? p.loyalty_programme_tiers
+          .map((t) => ({
+            id: t.id,
+            stamps: Number(t.stamps_required || 10),
+            title: t.title,
+            value: t.reward_value,
+          }))
+          .sort((a, b) => a.stamps - b.stamps)
+      : [],
+  }));
+
+  return { ok: true, source: 'supabase-live', rows };
+}
+
+/**
+ * Saves or creates a loyalty programme directly via RLS-authorized Supabase endpoints.
  */
 export async function saveLoyaltyProgramme(programmePayload) {
   if (!programmePayload?.name) {
@@ -647,14 +1275,39 @@ export async function saveLoyaltyProgramme(programmePayload) {
     return {
       ok: false,
       code: 'SUPABASE_NOT_CONFIGURED',
-      message:
-        'Programme configuration validated. Database changes require Phase 2B/Supabase Edge Function connection.',
+      message: 'Connect Supabase URL and public anon key before saving loyalty programmes.',
     };
   }
 
+  const cleanName = String(programmePayload.name).trim();
+  const slugCode = `PROG-${cleanName.toUpperCase().replace(/[^A-Z0-9]+/g, '-').slice(0, 18)}`;
+  const row = {
+    name: cleanName,
+    subtitle: String(programmePayload.subtitle || 'Spend · Collect · Redeem').trim(),
+    description: String(programmePayload.description || '').trim(),
+    status: String(programmePayload.status || 'Active').toLowerCase() === 'active' ? 'active' : 'inactive',
+    stamp_goal: Math.min(100, Math.max(1, Number(programmePayload.stampGoal || 10))),
+    qualifying_amount_inr: Math.max(1, Number(programmePayload.qualifyingAmountInr || 1000)),
+    calculation_rule: ['per_threshold', 'per_transaction', 'multiplier_2x'].includes(programmePayload.calculationRule)
+      ? programmePayload.calculationRule
+      : 'per_threshold',
+    stamp_validity_months: Math.max(1, Number(programmePayload.stampValidityMonths || 12)),
+    reward_validity_months: Math.max(1, Number(programmePayload.rewardValidityMonths || 6)),
+    eligibility_rule: String(programmePayload.eligibility || 'All active BONFREE-HUB members').trim(),
+  };
+
+  let res;
+  if (programmePayload.id) {
+    res = await restUpdate('loyalty_programmes', `id=eq.${encodeURIComponent(programmePayload.id)}`, row);
+  } else {
+    res = await restInsert('loyalty_programmes', { ...row, code: slugCode });
+  }
+
+  if (!res.ok) return res;
+  const saved = Array.isArray(res.data) ? res.data[0] : res.data;
   return {
-    ok: false,
-    code: 'SERVICE_PENDING',
-    message: 'Live programme persistence connects in Phase 2B.',
+    ok: true,
+    programme: saved,
+    message: `Programme "${cleanName}" saved to Supabase.`,
   };
 }

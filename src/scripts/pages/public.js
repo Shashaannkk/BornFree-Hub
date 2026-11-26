@@ -6,7 +6,7 @@ import { el, qs, qsa } from '../core/dom.js';
 import { createIcon } from '../core/icons.js';
 import { showToast, createAlert } from '../components/toast.js';
 import { clearFieldErrors, setButtonLoading, setFieldError, validateForm } from '../components/form.js';
-import { submitSurveyResponse } from '../services/loyaltyService.js';
+import { submitSurveyResponse, fetchPublishedSurvey } from '../services/loyaltyService.js';
 
 /**
  * Initializes the interactive 2x5 example loyalty card on `loyalty.html`.
@@ -138,13 +138,42 @@ export function initScrollReveals() {
 /**
  * Initializes responsive customer-facing survey (`survey.html`).
  */
-export function initCustomerSurveyPage() {
+export async function initCustomerSurveyPage() {
   const form = qs('#customer-survey-form');
   if (!form) return;
 
   const ratingInput = qs('#survey-rating-value');
   const starBtns = qsa('[data-survey-star]');
   const statusRegion = qs('#survey-status-region');
+  const querySurveyId =
+    typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('survey') : null;
+
+  let activeSurveyId = querySurveyId || 'srv-streetwear-2025';
+  const liveFetch = await fetchPublishedSurvey(querySurveyId);
+  if (liveFetch.ok && liveFetch.survey) {
+    activeSurveyId = liveFetch.survey.id;
+    if (liveFetch.survey.submitted) {
+      statusRegion?.appendChild(
+        createAlert({
+          variant: 'info',
+          title: 'Response Already Recorded',
+          message: 'Thank you! You have already submitted a response to this member survey.',
+        }),
+      );
+      const btn = form.querySelector('button[type="submit"]');
+      if (btn) btn.disabled = true;
+    }
+  } else if (liveFetch.code === 'SURVEY_NOT_OPEN') {
+    statusRegion?.appendChild(
+      createAlert({
+        variant: 'warning',
+        title: 'Survey Closed',
+        message: liveFetch.message,
+      }),
+    );
+    const btn = form.querySelector('button[type="submit"]');
+    if (btn) btn.disabled = true;
+  }
 
   for (const btn of starBtns) {
     btn.addEventListener('click', () => {
@@ -186,19 +215,29 @@ export function initCustomerSurveyPage() {
     setButtonLoading(submitBtn, true, 'Submitting...');
     try {
       const res = await submitSurveyResponse({
-        surveyId: 'srv-streetwear-2025',
+        surveyId: activeSurveyId,
         rating: Number(ratingInput.value),
-        ...values,
+        answers: values,
       });
       if (!res.ok) {
         statusRegion?.appendChild(
           createAlert({
-            variant: 'warning',
-            title: 'Backend Connection Pending (Phase 3)',
+            variant: res.code === 'SUPABASE_NOT_CONFIGURED' ? 'warning' : 'danger',
+            title: res.code === 'SUPABASE_NOT_CONFIGURED' ? 'Backend Connection Pending' : 'Submission Not Accepted',
             message: res.message,
           }),
         );
-        showToast({ message: res.message, variant: 'warning' });
+        showToast({ message: res.message, variant: res.code === 'SUPABASE_NOT_CONFIGURED' ? 'warning' : 'danger' });
+      } else {
+        statusRegion?.appendChild(
+          createAlert({
+            variant: 'success',
+            title: 'Survey Submitted',
+            message: res.message,
+          }),
+        );
+        showToast({ message: res.message, variant: 'success' });
+        if (submitBtn) submitBtn.disabled = true;
       }
     } finally {
       setButtonLoading(submitBtn, false);

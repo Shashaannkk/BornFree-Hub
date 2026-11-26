@@ -98,6 +98,27 @@
   white-space: nowrap;
 }
 
+.brand-logo {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.brand-logo img,
+.brand-logo__img {
+  display: block;
+  height: 38px;
+  width: auto;
+  max-width: 180px;
+  object-fit: contain;
+}
+
+.brand-logo--compact img,
+.brand-logo--compact .brand-logo__img {
+  height: 30px;
+  max-width: 148px;
+}
+
 .site-nav {
   display: flex;
   align-items: center;
@@ -117,12 +138,19 @@
   color: var(--color-text-inverse-muted);
 }
 
-.site-nav__link:hover,
-.site-nav__link[aria-current='page'] {
-  color: var(--color-text-primary);
+.site-nav__link:hover {
+  color: var(--color-brand-secondary);
 }
 
-.site-header--dark .site-nav__link:hover,
+.site-nav__link[aria-current='page'] {
+  color: var(--color-brand-primary);
+  font-weight: 600;
+}
+
+.site-header--dark .site-nav__link:hover {
+  color: var(--color-white);
+}
+
 .site-header--dark .site-nav__link[aria-current='page'] {
   color: var(--color-white);
 }
@@ -133,8 +161,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  height: 1.5px;
-  background-color: currentColor;
+  height: 2px;
+  background-color: var(--color-brand-primary);
 }
 
 .site-header__actions {
@@ -163,7 +191,7 @@
   position: fixed;
   inset: 0;
   z-index: var(--z-drawer);
-  background: rgba(16, 16, 16, 0.5);
+  background: var(--overlay-drawer-backdrop);
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--duration-base) var(--ease-standard);
@@ -274,13 +302,13 @@
 }
 
 .sidebar-nav__item:hover {
-  background-color: var(--color-charcoal);
+  background-color: var(--surface-dark-elevated);
   color: var(--color-white);
 }
 
 .sidebar-nav__item.is-active {
-  background-color: var(--color-white);
-  color: var(--color-black);
+  background-color: var(--color-brand-primary);
+  color: var(--color-white);
   font-weight: 600;
 }
 
@@ -289,12 +317,12 @@
 }
 
 .app-sidebar--light .sidebar-nav__item:hover {
-  background-color: var(--surface-subtle);
-  color: var(--color-black);
+  background-color: var(--color-brand-secondary-soft);
+  color: var(--color-brand-secondary);
 }
 
 .app-sidebar--light .sidebar-nav__item.is-active {
-  background-color: var(--color-black);
+  background-color: var(--color-brand-primary);
   color: var(--color-white);
 }
 
@@ -355,7 +383,7 @@
 }
 
 .mobile-bottom-nav__item.is-active {
-  background-color: var(--color-black);
+  background-color: var(--color-brand-primary);
   color: var(--color-white);
 }
 

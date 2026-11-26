@@ -10,12 +10,20 @@ import { confirmModal, openModal, closeModal } from '../components/modal.js';
 import { createAlert, showToast } from '../components/toast.js';
 import { createStatusBadge, renderDataTable } from '../components/table.js';
 import { renderCardSkeleton } from '../components/loader.js';
-import { setButtonLoading } from '../components/form.js';
+import { setButtonLoading, validateForm } from '../components/form.js';
 import {
+  requireCustomerSession,
+  signOutCustomer,
+} from '../services/authService.js';
+import {
+  computeNextAvailableReward,
   fetchCustomerPortalData,
   requestRewardRedemption,
+  submitSurveyResponse,
+  updateCustomerProfile,
   updateMemberPreferences,
 } from '../services/loyaltyService.js';
+import { isSupabaseConfigured } from '../core/config.js';
 
 const MEMBER_NAV_ITEMS = Object.freeze([
   { id: 'dashboard', label: 'Dashboard', icon: 'home' },
@@ -30,6 +38,7 @@ const VALID_VIEWS = new Set(MEMBER_NAV_ITEMS.map((i) => i.id));
 
 const portalStore = createStore({
   activeView: 'dashboard',
+  selectedCardId: null,
   viewMode: 'ready', // 'ready' | 'loading' | 'empty' | 'error'
   rewardFilter: 'all', // 'all' | 'available' | 'locked' | 'redeemed'
   stampFilter: 'all', // 'all' | 'earned' | 'redeemed'
@@ -71,13 +80,17 @@ async function copyMembershipId(code) {
   }
 }
 
-function createDigitalPassCard(member, { showCopy = false } = {}) {
-  const qrSvg = createMembershipQrSvg(member.membershipCode);
+function createDigitalPassCard(member, activeCard, { showCopy = false } = {}) {
+  const qrPayload = member.qrToken || member.membershipCode;
+  const qrSvg = createMembershipQrSvg(qrPayload);
 
   const infoCol = el('div', { className: 'digital-pass__info' }, [
     el('div', {}, [
       el('div', { className: 'loyalty-card__brand', text: 'BONFREE-HUB' }),
-      el('div', { className: 'loyalty-card__sub', text: 'LOYALTY MEMBER' }),
+      el('div', {
+        className: 'loyalty-card__sub',
+        text: `${activeCard.programmeName.toUpperCase()} · ${activeCard.status.toUpperCase()}`,
+      }),
     ]),
     el('div', { className: 'stack', style: 'gap: 0.25rem;' }, [
       el('div', { className: 'loyalty-card__name', text: member.firstName }),
@@ -89,7 +102,7 @@ function createDigitalPassCard(member, { showCopy = false } = {}) {
               {
                 type: 'button',
                 className: 'btn btn--ghost btn--icon btn--sm',
-                style: 'color: #ffffff; width: 26px; height: 26px;',
+                style: 'color: var(--color-white); width: 26px; height: 26px;',
                 'aria-label': 'Copy Membership ID',
                 onClick: () => copyMembershipId(member.membershipCode),
               },
@@ -112,18 +125,36 @@ function createDigitalPassCard(member, { showCopy = false } = {}) {
   ]);
 }
 
-function createProgressCard(member, onViewRewards) {
-  const remaining = Math.max(0, member.stampGoal - member.collectedStamps);
-  const pct = Math.min(100, Math.round((member.collectedStamps / member.stampGoal) * 100));
+function createProgressCard(activeCard, rewards, onViewRewards, onRefresh) {
+  const remaining = Math.max(0, activeCard.stampGoal - activeCard.collectedStamps);
+  const pct = Math.min(100, Math.round((activeCard.collectedStamps / activeCard.stampGoal) * 100));
+  const nextReward = computeNextAvailableReward(
+    activeCard.collectedStamps,
+    rewards,
+    activeCard.programmeId,
+  );
+
+  const cardStatusTone =
+    activeCard.status === 'completed'
+      ? 'active'
+      : activeCard.status === 'expired'
+      ? 'danger'
+      : 'neutral';
+  const cardStatusLabel =
+    activeCard.status === 'completed'
+      ? 'Completed Card'
+      : activeCard.status === 'expired'
+      ? 'Programme Expired'
+      : 'Active Card';
 
   const stampRow = el('div', {
     className: 'progress-card__stamps',
     role: 'img',
-    'aria-label': `${member.collectedStamps} of ${member.stampGoal} stamps collected`,
+    'aria-label': `${activeCard.collectedStamps} of ${activeCard.stampGoal} stamps collected`,
   });
 
-  for (let i = 1; i <= member.stampGoal; i += 1) {
-    const earned = i <= member.collectedStamps;
+  for (let i = 1; i <= activeCard.stampGoal; i += 1) {
+    const earned = i <= activeCard.collectedStamps;
     stampRow.appendChild(
       el('span', { className: `stamp-badge-circle${earned ? ' is-earned' : ''}` }, [
         createIcon(earned ? 'check' : 'stamp', { size: 14 }),
@@ -132,9 +163,22 @@ function createProgressCard(member, onViewRewards) {
   }
 
   return el('article', { className: 'progress-card' }, [
-    el('div', { className: 'between' }, [
+    el('div', { className: 'between', style: 'flex-wrap: wrap;' }, [
       el('span', { className: 'eyebrow', text: 'YOUR LOYALTY PROGRESS' }),
-      el('span', { className: 'badge badge--neutral', text: `${member.programmeName} · ${member.programmeRule}` }),
+      el('div', { className: 'cluster' }, [
+        createStatusBadge(cardStatusLabel, cardStatusTone),
+        el('span', { className: 'badge badge--neutral', text: `${activeCard.programmeName} · ${activeCard.programmeRule}` }),
+        el(
+          'button',
+          {
+            type: 'button',
+            className: 'btn btn--outline-muted btn--sm',
+            onClick: onRefresh,
+            'aria-label': 'Refresh loyalty progress',
+          },
+          [el('span', { text: 'Refresh' })],
+        ),
+      ]),
     ]),
     stampRow,
     el('div', { className: 'stack', style: 'gap: 0.5rem;' }, [
@@ -142,11 +186,11 @@ function createProgressCard(member, onViewRewards) {
         el('strong', {
           className: 'page-title',
           style: 'font-size: 1.5rem;',
-          text: `${member.collectedStamps}/${member.stampGoal} Stamps`,
+          text: `${activeCard.collectedStamps}/${activeCard.stampGoal} Stamps`,
         }),
         el('span', {
           className: 'text-xs text-muted',
-          text: `${member.collectedStamps} collected · ${remaining} remaining`,
+          text: `${activeCard.collectedStamps} collected · ${remaining} remaining`,
         }),
       ]),
       el('div', { className: 'progress-track', role: 'progressbar', 'aria-valuenow': String(pct), 'aria-valuemin': '0', 'aria-valuemax': '100' }, [
@@ -164,14 +208,8 @@ function createProgressCard(member, onViewRewards) {
         el('div', { className: 'cluster', style: 'flex-wrap: nowrap;' }, [
           createIcon('gift', { size: 20 }),
           el('div', {}, [
-            el('div', { className: 'text-xs text-muted', text: 'Next Reward' }),
-            el('strong', {
-              className: 'text-sm',
-              text:
-                remaining > 0
-                  ? `Collect ${remaining} more ${remaining === 1 ? 'stamp' : 'stamps'} to unlock a ₹500 Voucher`
-                  : '₹500 Voucher ready to redeem!',
-            }),
+            el('div', { className: 'text-xs text-muted', text: 'Next Available Reward' }),
+            el('strong', { className: 'text-sm', text: nextReward.message }),
           ]),
         ]),
         createIcon('chevron-right', { size: 16 }),
@@ -180,15 +218,187 @@ function createProgressCard(member, onViewRewards) {
   ]);
 }
 
+function openMemberSurveyModal(survey) {
+  const statusRegion = el('div', { 'aria-live': 'polite' });
+  const answers = {};
+  let selectedRating = null;
+
+  const form = el('form', { className: 'form-stack', novalidate: true }, [
+    statusRegion,
+    survey.subtitle ? el('p', { className: 'text-sm text-muted', text: survey.subtitle }) : null,
+    ...(survey.questions || []).map((q, idx) => {
+      const label = el('label', {
+        className: 'field__label',
+        text: `${idx + 1}. ${q.prompt}${q.isRequired ? ' *' : ''}`,
+      });
+
+      if (q.type === 'rating') {
+        const starRow = el('div', { className: 'cluster' });
+        const buttons = [1, 2, 3, 4, 5].map((star) =>
+          el('button', {
+            type: 'button',
+            className: 'btn btn--outline-muted btn--sm',
+            text: `${star} ★`,
+            onClick: () => {
+              selectedRating = star;
+              answers[q.id] = star;
+              buttons.forEach((b, i) => {
+                b.className = i + 1 <= star ? 'btn btn--primary btn--sm' : 'btn btn--outline-muted btn--sm';
+              });
+            },
+          }),
+        );
+        starRow.append(...buttons);
+        return el('div', { className: 'field' }, [label, starRow]);
+      }
+
+      if (q.type === 'multiple_choice') {
+        const select = el(
+          'select',
+          {
+            className: 'select',
+            name: q.id,
+            required: Boolean(q.isRequired),
+          },
+          [
+            el('option', { value: '', text: 'Select an option' }),
+            ...(q.options || []).map((opt) => el('option', { value: opt, text: opt })),
+          ],
+        );
+        select.addEventListener('change', () => {
+          answers[q.id] = select.value;
+          answers.favoriteCollection = answers.favoriteCollection || select.value;
+        });
+        return el('div', { className: 'field' }, [label, select]);
+      }
+
+      if (q.type === 'long_answer') {
+        const area = el('textarea', {
+          className: 'textarea',
+          name: q.id,
+          placeholder: 'Share your feedback...',
+          required: Boolean(q.isRequired),
+        });
+        area.addEventListener('input', () => {
+          answers[q.id] = area.value;
+        });
+        return el('div', { className: 'field' }, [label, area]);
+      }
+
+      const inp = el('input', {
+        type: 'text',
+        className: 'input',
+        name: q.id,
+        placeholder: 'Your answer...',
+        required: Boolean(q.isRequired),
+      });
+      inp.addEventListener('input', () => {
+        answers[q.id] = inp.value;
+      });
+      return el('div', { className: 'field' }, [label, inp]);
+    }),
+  ]);
+
+  const submitBtn = el('button', {
+    type: 'button',
+    className: 'btn btn--primary',
+    text: 'Submit Survey Response',
+    onClick: async () => {
+      clearElement(statusRegion);
+      const { valid } = validateForm(form);
+      const hasRatingQ = (survey.questions || []).some((q) => q.type === 'rating' && q.isRequired);
+      if (!valid || (hasRatingQ && !selectedRating)) {
+        statusRegion.appendChild(
+          createAlert({
+            variant: 'danger',
+            title: 'Required Questions Incomplete',
+            message: 'Complete all required rating and feedback questions before submitting.',
+          }),
+        );
+        return;
+      }
+
+      setButtonLoading(submitBtn, true, 'Submitting...');
+      const res = await submitSurveyResponse({
+        surveyId: survey.id,
+        rating: selectedRating,
+        answers,
+      });
+      setButtonLoading(submitBtn, false);
+
+      if (!res.ok) {
+        statusRegion.appendChild(
+          createAlert({
+            variant: res.code === 'SUPABASE_NOT_CONFIGURED' ? 'warning' : 'danger',
+            title: res.code === 'SUPABASE_NOT_CONFIGURED' ? 'Backend Connection Required' : 'Submission Rejected',
+            message: res.message,
+          }),
+        );
+        showToast({ message: res.message, variant: res.code === 'SUPABASE_NOT_CONFIGURED' ? 'warning' : 'danger' });
+      } else {
+        closeModal();
+        showToast({ message: res.message, variant: 'success', durationMs: 5000 });
+        await loadPortalData();
+      }
+    },
+  });
+
+  openModal({
+    title: survey.title,
+    body: form,
+    footerActions: [
+      el('button', { type: 'button', className: 'btn btn--outline-muted', text: 'Cancel', onClick: closeModal }),
+      submitBtn,
+    ],
+  });
+}
+
 function renderDashboardOverview(container, data, navigateTo) {
-  const { member, rewards, purchases, stampActivity } = data;
+  const { member, cards = [], rewards, purchases, stampActivity, campaigns = [], surveys = [] } = data;
+  const { selectedCardId } = portalStore.getState();
+  const activeCard =
+    cards.find((c) => c.id === selectedCardId) ||
+    cards[0] || {
+      id: 'default',
+      programmeId: null,
+      programmeName: member.programmeName,
+      programmeRule: member.programmeRule,
+      stampGoal: member.stampGoal,
+      collectedStamps: member.collectedStamps,
+      status: 'active',
+    };
+
   const recentRewards = rewards.filter((r) => r.status === 'redeemed').slice(0, 3);
   const recentPurchases = purchases.slice(0, 3);
   const recentStamps = stampActivity.slice(0, 3);
 
+  const cardSwitcher =
+    cards.length > 1
+      ? el('div', { className: 'between', style: 'flex-wrap: wrap;' }, [
+          el('span', { className: 'text-xs text-muted', text: `Enrolled Loyalty Programmes (${cards.length})` }),
+          el(
+            'div',
+            { className: 'segmented', role: 'tablist', 'aria-label': 'Switch loyalty programme card' },
+            cards.map((c) =>
+              el('button', {
+                type: 'button',
+                role: 'tab',
+                'aria-selected': String(c.id === activeCard.id),
+                className: `segmented__btn${c.id === activeCard.id ? ' is-active' : ''}`,
+                text: `${c.programmeName} (${c.collectedStamps}/${c.stampGoal})`,
+                onClick: () => {
+                  portalStore.setState({ selectedCardId: c.id });
+                  renderPortalContent();
+                },
+              }),
+            ),
+          ),
+        ])
+      : null;
+
   const topHero = el('div', { className: 'member-card-hero' }, [
-    createDigitalPassCard(member, { showCopy: true }),
-    createProgressCard(member, () => navigateTo('rewards')),
+    createDigitalPassCard(member, activeCard, { showCopy: true }),
+    createProgressCard(activeCard, rewards, () => navigateTo('rewards'), () => loadPortalData()),
   ]);
 
   const rewardCard = el('section', { className: 'feed-card' }, [
@@ -278,38 +488,142 @@ function renderDashboardOverview(container, data, navigateTo) {
     ),
   ]);
 
-  container.append(topHero, el('div', { className: 'member-feeds-grid' }, [rewardCard, purchaseCard, stampCard]));
+  const campaignsCard = el('section', { className: 'feed-card' }, [
+    el('div', { className: 'between' }, [
+      el('h3', { className: 'card__title', text: 'Active Member Promotions' }),
+      el('span', { className: 'badge badge--dark', text: `${campaigns.length} Live` }),
+    ]),
+    campaigns.length > 0
+      ? el(
+          'div',
+          { className: 'feed-list' },
+          campaigns.slice(0, 3).map((camp) =>
+            el('div', { className: 'feed-item' }, [
+              el('div', { className: 'feed-item__left' }, [
+                el('span', { className: 'feed-item__thumb' }, [createIcon('tag', { size: 16 })]),
+                el('div', { style: 'min-width: 0;' }, [
+                  el('div', { className: 'feed-item__title', text: camp.title }),
+                  el('div', {
+                    className: 'text-xs text-muted',
+                    text: `${camp.rule} · Ends ${camp.endDate}`,
+                  }),
+                ]),
+              ]),
+              createStatusBadge(camp.programmeName || 'Eligible', 'active'),
+            ]),
+          ),
+        )
+      : el('p', { className: 'text-xs text-muted', text: 'No active seasonal campaigns right now.' }),
+  ]);
+
+  const surveysCard = el('section', { className: 'feed-card' }, [
+    el('div', { className: 'between' }, [
+      el('h3', { className: 'card__title', text: 'Member Feedback Surveys' }),
+      el('a', { href: 'survey.html', className: 'auth-link', text: 'Survey Page >' }),
+    ]),
+    surveys.length > 0
+      ? el(
+          'div',
+          { className: 'feed-list' },
+          surveys.slice(0, 3).map((sv) =>
+            el('div', { className: 'feed-item' }, [
+              el('div', { className: 'feed-item__left' }, [
+                el('span', { className: 'feed-item__thumb' }, [createIcon('star', { size: 16 })]),
+                el('div', { style: 'min-width: 0;' }, [
+                  el('div', { className: 'feed-item__title', text: sv.title }),
+                  el('div', { className: 'text-xs text-muted', text: `${(sv.questions || []).length} questions` }),
+                ]),
+              ]),
+              sv.submitted
+                ? createStatusBadge('Completed', 'neutral')
+                : el('button', {
+                    type: 'button',
+                    className: 'btn btn--primary btn--sm',
+                    text: 'Take Survey',
+                    onClick: () => openMemberSurveyModal(sv),
+                  }),
+            ]),
+          ),
+        )
+      : el('p', { className: 'text-xs text-muted', text: 'No open feedback surveys at the moment.' }),
+  ]);
+
+  const engagementGrid = el('div', { className: 'grid grid-2' }, [campaignsCard, surveysCard]);
+
+  if (cardSwitcher) {
+    container.append(cardSwitcher, topHero, el('div', { className: 'member-feeds-grid' }, [rewardCard, purchaseCard, stampCard]), engagementGrid);
+  } else {
+    container.append(topHero, el('div', { className: 'member-feeds-grid' }, [rewardCard, purchaseCard, stampCard]), engagementGrid);
+  }
+}
+
+async function copyTextWithToast(text, label = 'Copied') {
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+    }
+    showToast({ message: `${label}: ${text}`, variant: 'success' });
+  } catch {
+    showToast({ message: `${label}: ${text}`, variant: 'info' });
+  }
 }
 
 function handleRedeemClick(reward) {
+  const statusRegion = el('div', { 'aria-live': 'polite' });
+  const idempotencyKey =
+    typeof crypto !== 'undefined' && crypto.randomUUID
+      ? `rdm-${reward.id}-${crypto.randomUUID().slice(0, 8)}`
+      : `rdm-${reward.id}-${Math.random().toString(36).slice(2, 10)}`;
+
   const confirmBtn = el('button', {
     type: 'button',
     className: 'btn btn--primary',
-    text: 'Submit Redemption Request',
+    text: `Generate Voucher (-${reward.requiredStamps} Stamps)`,
     onClick: async () => {
+      clearElement(statusRegion);
       setButtonLoading(confirmBtn, true, 'Requesting...');
-      const res = await requestRewardRedemption({ rewardId: reward.id });
+      const res = await requestRewardRedemption({ rewardId: reward.id, idempotencyKey });
       setButtonLoading(confirmBtn, false);
+
+      if (!res.ok) {
+        statusRegion.appendChild(
+          createAlert({
+            variant: res.code === 'SUPABASE_NOT_CONFIGURED' ? 'warning' : 'danger',
+            title: res.code === 'NETWORK_ERROR' ? 'Connection Interrupted — Retry Safely' : 'Unable to Redeem',
+            message: res.message,
+          }),
+        );
+        showToast({
+          message: res.message,
+          variant: res.code === 'SUPABASE_NOT_CONFIGURED' ? 'warning' : 'danger',
+          durationMs: 5000,
+        });
+        return;
+      }
+
       closeModal();
+      const voucher = res.result?.voucher_code;
       showToast({
-        message: res.message,
-        variant: res.ok ? 'success' : 'warning',
-        durationMs: 5000,
+        message: voucher ? `Voucher ${voucher} generated and active!` : res.message,
+        variant: 'success',
+        durationMs: 6000,
       });
+      await loadPortalData();
     },
   });
 
   openModal({
     title: `Redeem — ${reward.title}`,
     body: el('div', { className: 'stack' }, [
+      statusRegion,
       el('p', {
         className: 'text-sm text-muted',
-        text: `This reward requires ${reward.requiredStamps} stamps. In production, submitting this request validates your balance atomically on the server and generates a single-use checkout voucher code.`,
+        text: `Confirming deducts ${reward.requiredStamps} stamps server-side from your card and generates a single-use checkout voucher code.`,
       }),
       createAlert({
         variant: 'info',
-        title: 'Tamper-Proof Balance Rule',
-        message: 'Balances cannot be modified in the browser before Phase 2 Edge Function connection.',
+        title: 'Atomic Voucher Protection',
+        message: 'If store staff reject an unused pending voucher, your spent stamps are refunded to your card ledger.',
       }),
     ]),
     footerActions: [
@@ -331,8 +645,12 @@ function renderRewardsView(container, data) {
   const filters = [
     { id: 'all', label: `All (${rewards.length})` },
     { id: 'available', label: `Available (${rewards.filter((r) => r.status === 'available').length})` },
+    { id: 'pending', label: `Active Vouchers (${rewards.filter((r) => r.status === 'pending').length})` },
     { id: 'locked', label: `Locked (${rewards.filter((r) => r.status === 'locked').length})` },
-    { id: 'redeemed', label: `Redeemed (${rewards.filter((r) => r.status === 'redeemed').length})` },
+    {
+      id: 'redeemed',
+      label: `History (${rewards.filter((r) => r.status === 'redeemed' || r.status === 'expired' || r.status === 'rejected').length})`,
+    },
   ];
 
   const segmented = el(
@@ -353,17 +671,42 @@ function renderRewardsView(container, data) {
     ),
   );
 
-  const visible = rewardFilter === 'all' ? rewards : rewards.filter((r) => r.status === rewardFilter);
+  const visible =
+    rewardFilter === 'all'
+      ? rewards
+      : rewardFilter === 'redeemed'
+      ? rewards.filter((r) => r.status === 'redeemed' || r.status === 'expired' || r.status === 'rejected')
+      : rewards.filter((r) => r.status === rewardFilter);
 
   const grid = el(
     'div',
     { className: 'rewards-grid' },
     visible.map((rw) => {
+      const isPending = rw.status === 'pending';
       const isLocked = rw.status === 'locked';
-      const isRedeemed = rw.status === 'redeemed';
-      const badgeTone = rw.status === 'available' ? 'active' : isLocked ? 'warning' : 'neutral';
-      const badgeLabel = rw.status === 'available' ? 'Available' : isLocked ? 'Locked' : 'Redeemed';
-      const stampsNeeded = Math.max(0, rw.requiredStamps - member.collectedStamps);
+      const isHistory = rw.status === 'redeemed' || rw.status === 'expired' || rw.status === 'rejected';
+      const badgeTone =
+        rw.status === 'available'
+          ? 'active'
+          : isPending || isLocked
+          ? 'warning'
+          : rw.status === 'rejected'
+          ? 'danger'
+          : 'neutral';
+      const badgeLabel =
+        rw.status === 'available'
+          ? 'Unlocked'
+          : isPending
+          ? 'Active Voucher'
+          : isLocked
+          ? 'Locked'
+          : rw.status === 'expired'
+          ? 'Expired'
+          : rw.status === 'rejected'
+          ? 'Rejected'
+          : 'Redeemed';
+      const baseStamps = rw.cardStamps ?? member.collectedStamps;
+      const stampsNeeded = Math.max(0, rw.requiredStamps - baseStamps);
 
       return el('article', { className: `reward-item-card${isLocked ? ' is-locked' : ''}` }, [
         el('div', { className: 'stack', style: 'gap: 0.75rem;' }, [
@@ -379,21 +722,33 @@ function renderRewardsView(container, data) {
             el('p', { className: 'text-sm text-muted', style: 'margin-top: 0.25rem;', text: rw.description }),
           ]),
           rw.voucherCode
-            ? el('div', { className: 'cluster' }, [
-                el('span', { className: 'text-xs text-muted', text: 'Voucher Code:' }),
-                el('span', { className: 'voucher-code-chip', text: rw.voucherCode }),
+            ? el('div', { className: 'between', style: 'gap: 0.5rem; flex-wrap: wrap;' }, [
+                el('div', { className: 'cluster' }, [
+                  el('span', { className: 'text-xs text-muted', text: 'Voucher Code:' }),
+                  el('span', { className: 'voucher-code-chip', text: rw.voucherCode }),
+                ]),
+                isPending
+                  ? el('button', {
+                      type: 'button',
+                      className: 'btn btn--outline-muted btn--sm',
+                      text: 'Copy Code',
+                      onClick: () => copyTextWithToast(rw.voucherCode, 'Voucher Code copied'),
+                    })
+                  : null,
               ])
             : null,
           el('div', { className: 'text-xs text-muted', text: rw.validityText }),
         ]),
-        isRedeemed
-          ? el('div', { className: 'text-xs text-muted', text: `Completed on ${rw.redeemedAt}` })
+        isHistory
+          ? el('div', { className: 'text-xs text-muted', text: rw.validityText })
+          : isPending
+          ? el('div', { className: 'text-xs text-muted', text: 'Present this voucher code to staff at checkout.' })
           : isLocked
           ? el('button', {
               type: 'button',
               className: 'btn btn--outline-muted btn--block',
               disabled: true,
-              text: `Need ${stampsNeeded} more ${stampsNeeded === 1 ? 'stamp' : 'stamps'} to unlock`,
+              text: rw.lockReason || `Need ${stampsNeeded} more ${stampsNeeded === 1 ? 'stamp' : 'stamps'} to unlock`,
             })
           : el('button', {
               type: 'button',
@@ -592,27 +947,121 @@ function renderPurchaseHistoryView(container, data) {
 
 function renderProfileView(container, data) {
   const { member } = data;
-  const rows = [
-    ['Full Name', member.fullName],
+  const protectedRows = [
     ['Membership ID', member.membershipCode],
     ['Email Address', member.email],
-    ['Mobile Number', member.mobile],
     ['Member Since', member.joinedDate],
     ['Active Programme', `${member.programmeName} (${member.programmeRule})`],
     ['Verified Stamp Balance', `${member.collectedStamps} / ${member.stampGoal} Stamps (Read-Only)`],
   ];
+
+  const statusRegion = el('div', { 'aria-live': 'polite' });
+  const editForm = el('form', { className: 'card form-stack', id: 'member-profile-form', novalidate: true }, [
+    el('h3', { className: 'card__title', text: 'Personal Details' }),
+    statusRegion,
+    el('div', { className: 'grid grid-3' }, [
+      el('div', { className: 'field' }, [
+        el('label', { className: 'field__label', for: 'prof-name', text: 'Full Name *' }),
+        el('input', {
+          id: 'prof-name',
+          name: 'fullName',
+          type: 'text',
+          className: 'input',
+          value: member.fullName,
+          minlength: '2',
+          required: true,
+        }),
+      ]),
+      el('div', { className: 'field' }, [
+        el('label', { className: 'field__label', for: 'prof-mobile', text: 'Mobile Number' }),
+        el('input', {
+          id: 'prof-mobile',
+          name: 'mobile',
+          type: 'tel',
+          className: 'input',
+          value: member.mobile || '',
+          placeholder: '+91 98765 43210',
+        }),
+      ]),
+      el('div', { className: 'field' }, [
+        el('label', { className: 'field__label', for: 'prof-birth-month', text: 'Birth Month (Optional)' }),
+        el(
+          'select',
+          { id: 'prof-birth-month', name: 'birthMonth', className: 'select' },
+          [
+            el('option', { value: '', text: 'Select month' }),
+            ...[
+              'January', 'February', 'March', 'April', 'May', 'June',
+              'July', 'August', 'September', 'October', 'November', 'December',
+            ].map((m, idx) =>
+              el('option', {
+                value: String(idx + 1),
+                text: m,
+                selected: Number(member.birthMonth) === idx + 1,
+              }),
+            ),
+          ],
+        ),
+      ]),
+    ]),
+    el('div', { className: 'cluster', style: 'justify-content: flex-end;' }, [
+      el('button', { type: 'submit', className: 'btn btn--primary', text: 'Save Profile' }),
+    ]),
+  ]);
+
+  editForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    clearElement(statusRegion);
+    const { valid, values } = validateForm(editForm);
+    if (!valid) {
+      statusRegion.appendChild(
+        createAlert({ variant: 'danger', title: 'Validation Error', message: 'Enter a valid full name.' }),
+      );
+      return;
+    }
+
+    const submitBtn = editForm.querySelector('button[type="submit"]');
+    setButtonLoading(submitBtn, true, 'Saving...');
+    try {
+      const res = await updateCustomerProfile({
+        fullName: values.fullName,
+        mobile: values.mobile,
+        birthMonth: values.birthMonth,
+      });
+
+      if (res.code === 'SESSION_EXPIRED') {
+        window.location.href = 'login.html?reason=session_expired';
+        return;
+      }
+
+      statusRegion.appendChild(
+        createAlert({
+          variant: res.ok ? 'success' : res.code === 'SUPABASE_NOT_CONFIGURED' ? 'warning' : 'danger',
+          title: res.ok ? 'Profile Updated' : 'Update Status',
+          message: res.message,
+        }),
+      );
+      showToast({ message: res.message, variant: res.ok ? 'success' : 'warning' });
+      if (res.ok) {
+        loadPortalData();
+      }
+    } finally {
+      setButtonLoading(submitBtn, false);
+    }
+  });
 
   container.append(
     el('h2', { className: 'page-title', text: 'My Profile' }),
     createAlert({
       variant: 'info',
       title: 'Protected Membership Fields',
-      message: 'Membership ID, stamp balance, and tier eligibility are read-only and controlled by the backend.',
+      message: 'Membership ID, stamp balance, and tier eligibility are read-only and enforced by PostgreSQL RLS.',
     }),
+    editForm,
     el(
       'div',
       { className: 'card grid grid-2' },
-      rows.map(([label, val]) =>
+      protectedRows.map(([label, val]) =>
         el('div', { className: 'stack', style: 'gap: 0.2rem;' }, [
           el('span', { className: 'text-xs text-muted', text: label }),
           el('strong', { className: 'text-sm', text: val }),
@@ -759,12 +1208,33 @@ function syncNavHighlight() {
 async function handleSignOut() {
   const confirmed = await confirmModal({
     title: 'Sign Out of BONFREE-HUB',
-    message: 'Are you sure you want to sign out of your customer portal preview?',
+    message: 'Are you sure you want to sign out of your customer loyalty account?',
     confirmLabel: 'Sign Out',
     cancelLabel: 'Stay Signed In',
   });
   if (confirmed) {
+    await signOutCustomer();
     window.location.href = 'login.html';
+  }
+}
+
+function hydrateBannerIdentity(data) {
+  const { member, isDevelopmentFixture } = data;
+  const nameEl = qs('#member-banner-name');
+  const idEl = qs('#member-banner-id');
+  const badgeEl = qs('#member-fixture-badge');
+  const topNameEl = qs('#member-topbar-name');
+  const topAvatarEl = qs('#member-topbar-avatar');
+
+  if (nameEl) nameEl.textContent = member.firstName;
+  if (idEl) idEl.textContent = member.membershipCode;
+  if (topNameEl) topNameEl.textContent = member.firstName;
+  if (topAvatarEl) topAvatarEl.textContent = (member.firstName || 'M')[0].toUpperCase();
+  if (badgeEl) {
+    badgeEl.textContent = isDevelopmentFixture
+      ? 'Development Preview Data (Read-Only)'
+      : 'Verified Loyalty Member';
+    badgeEl.className = isDevelopmentFixture ? 'badge badge--neutral' : 'badge badge--active';
   }
 }
 
@@ -774,18 +1244,44 @@ async function loadPortalData() {
 
   const res = await fetchCustomerPortalData();
   if (!res.ok) {
+    if (res.code === 'SESSION_EXPIRED' || res.code === 'NO_SESSION') {
+      window.location.href = 'login.html?reason=session_expired';
+      return;
+    }
     portalStore.setState({ viewMode: 'error', errorMessage: res.message });
   } else {
     portalStore.setState({ viewMode: 'ready', data: res.data });
+    hydrateBannerIdentity(res.data);
     const copyIdBtn = qs('#copy-member-id-btn');
-    copyIdBtn?.addEventListener('click', () => copyMembershipId(res.data.member.membershipCode));
+    if (copyIdBtn && copyIdBtn.dataset.bound !== 'true') {
+      copyIdBtn.dataset.bound = 'true';
+      copyIdBtn.addEventListener('click', () => {
+        const currentCode = portalStore.getState().data?.member.membershipCode || 'BF-001248';
+        copyMembershipId(currentCode);
+      });
+    }
   }
   renderPortalContent();
 }
 
-export function initCustomerDashboard() {
+export async function initCustomerDashboard() {
   const host = qs('#member-view-host');
   if (!host) return;
+
+  const authGuard = await requireCustomerSession();
+  if (!authGuard.ok) {
+    window.location.href = authGuard.redirectUrl || 'login.html?reason=auth_required';
+    return;
+  }
+
+  const reason = new URLSearchParams(window.location.search).get('reason');
+  if (reason === 'unauthorized_admin') {
+    showToast({
+      message: 'Admin portal access is restricted to verified store & admin staff.',
+      variant: 'warning',
+      durationMs: 5000,
+    });
+  }
 
   const hashView = window.location.hash.replace('#', '');
   if (VALID_VIEWS.has(hashView)) {
@@ -836,4 +1332,12 @@ export function initCustomerDashboard() {
 
   syncNavHighlight();
   loadPortalData();
+
+  if (isSupabaseConfigured()) {
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        loadPortalData();
+      }
+    });
+  }
 }

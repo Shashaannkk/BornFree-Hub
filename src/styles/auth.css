@@ -43,9 +43,9 @@
   inset: 0;
   background: linear-gradient(
     90deg,
-    rgba(16, 16, 16, 0.84) 0%,
-    rgba(16, 16, 16, 0.56) 55%,
-    rgba(16, 16, 16, 0.28) 100%
+    var(--scrim-dark-start) 0%,
+    var(--scrim-dark-mid) 55%,
+    var(--scrim-dark-end) 100%
   );
   pointer-events: none;
 }
@@ -70,7 +70,7 @@
 .auth-split__media-copy {
   font-size: var(--text-sm);
   line-height: 1.65;
-  color: rgba(255, 255, 255, 0.86);
+  color: var(--overlay-inverse-copy);
 }
 
 /* Right Form Panel */
@@ -116,13 +116,13 @@
 .auth-link {
   font-size: var(--text-xs);
   font-weight: 600;
-  color: var(--color-black);
+  color: var(--color-brand-secondary);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
 .auth-link:hover {
-  opacity: 0.75;
+  color: var(--color-brand-secondary-hover);
 }
 
 .auth-switch-note {
@@ -170,8 +170,8 @@
 }
 
 .password-rule.is-met .password-rule__dot {
-  background-color: var(--color-black);
-  border-color: var(--color-black);
+  background-color: var(--color-brand-secondary);
+  border-color: var(--color-brand-secondary);
   color: var(--color-white);
 }
 
@@ -240,7 +240,7 @@
   width: 16px;
   height: 16px;
   margin-top: 2px;
-  accent-color: var(--color-black);
+  accent-color: var(--color-brand-secondary);
   flex-shrink: 0;
 }
 

@@ -11,6 +11,7 @@ const DEFAULTS = Object.freeze({
   appTagline: 'Modern Streetwear & Everyday Fashion',
   currencySymbol: '₹',
   defaultStampGoal: 10,
+  supportEmail: 'care@bonfree-hub.in',
   supabaseUrl: '',
   supabaseAnonKey: '',
   environment: 'development',
@@ -22,7 +23,20 @@ const DEFAULTS = Object.freeze({
  */
 export function getPublicConfig() {
   if (typeof document === 'undefined') {
-    return { ...DEFAULTS };
+    const nodeEnv =
+      typeof process !== 'undefined' && process.env
+        ? {
+            supabaseUrl: String(process.env.PUBLIC_SUPABASE_URL || '').trim(),
+            supabaseAnonKey: String(process.env.PUBLIC_SUPABASE_ANON_KEY || '').trim(),
+            environment: String(process.env.PUBLIC_APP_ENV || DEFAULTS.environment).trim(),
+          }
+        : {};
+    return Object.freeze({
+      ...DEFAULTS,
+      supabaseUrl: nodeEnv.supabaseUrl || DEFAULTS.supabaseUrl,
+      supabaseAnonKey: nodeEnv.supabaseAnonKey || DEFAULTS.supabaseAnonKey,
+      environment: nodeEnv.environment || DEFAULTS.environment,
+    });
   }
 
   const metaUrl = document.querySelector('meta[name="bonfree-supabase-url"]')?.content?.trim() || '';
@@ -41,4 +55,8 @@ export function getPublicConfig() {
 export function isSupabaseConfigured() {
   const cfg = getPublicConfig();
   return Boolean(cfg.supabaseUrl && cfg.supabaseAnonKey);
+}
+
+export function isProductionEnvironment() {
+  return getPublicConfig().environment === 'production';
 }

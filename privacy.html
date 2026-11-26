@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="BONFREE-HUB Privacy Policy — how member profiles, opaque membership QR identifiers, purchase records, and loyalty stamps are protected."
+    />
+    <meta name="bonfree-env" content="development" />
+    <title>Privacy Policy — BONFREE-HUB</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="src/styles/tokens.css" />
+    <link rel="stylesheet" href="src/styles/reset.css" />
+    <link rel="stylesheet" href="src/styles/layout.css" />
+    <link rel="stylesheet" href="src/styles/components.css" />
+    <link rel="stylesheet" href="src/styles/public.css" />
+  </head>
+  <body data-page="privacy">
+    <header id="site-header"></header>
+
+    <main>
+      <section class="section">
+        <div class="container stack" style="max-width: 780px; gap: 1.5rem">
+          <div class="stack" style="gap: 0.5rem">
+            <p class="eyebrow">Member Data Protection</p>
+            <h1 class="display-title">Privacy Policy</h1>
+            <p class="text-sm text-muted">Effective Date: November 2026 · BONFREE-HUB Retail &amp; Loyalty</p>
+          </div>
+
+          <article class="card stack" style="gap: 1rem">
+            <h2 class="card__title">1. Information We Collect</h2>
+            <p class="text-sm text-muted">
+              BONFREE-HUB collects only the member details necessary to operate your digital loyalty
+              account: your full name, email address, mobile number, birth month (optional for
+              birthday rewards), qualifying in-store purchase references, stamp ledger history, and
+              voluntary feedback survey responses.
+            </p>
+
+            <h2 class="card__title">2. Opaque Membership QR Security</h2>
+            <p class="text-sm text-muted">
+              Your digital loyalty pass QR code encodes solely a non-sensitive opaque membership
+              identifier (for example, <code>BFQR-…</code>). It never embeds your email, phone
+              number, password, or authorization tokens, and scanning alone cannot award stamps or
+              redeem rewards without verified store-staff authentication and a qualifying receipt.
+            </p>
+
+            <h2 class="card__title">3. Storage, Access Control &amp; Zero Sale of Data</h2>
+            <p class="text-sm text-muted">
+              Member accounts are stored in PostgreSQL with Row Level Security (RLS) so members may
+              access only their own profile, stamp cards, and vouchers. BONFREE-HUB never sells or
+              rents customer personal information to third-party advertisers.
+            </p>
+
+            <h2 class="card__title">4. Member Rights &amp; Contact</h2>
+            <p class="text-sm text-muted">
+              You may update your profile details or communication preferences inside the Customer
+              Dashboard at any time. To request account export or deletion, write to
+              <a href="mailto:care@bonfree-hub.in" class="auth-link">care@bonfree-hub.in</a> or
+              visit our <a href="contact.html" class="auth-link">Contact Page</a>.
+            </p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer id="site-footer"></footer>
+    <script type="module" src="src/scripts/main.js"></script>
+  </body>
+</html>
