@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Create your BONFREE-HUB Loyalty Club account to start earning digital stamps and exclusive streetwear rewards."
+    />
+    <meta name="bonfree-env" content="development" />
+    <title>Join Now — BONFREE-HUB Loyalty Membership</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="src/styles/tokens.css" />
+    <link rel="stylesheet" href="src/styles/reset.css" />
+    <link rel="stylesheet" href="src/styles/layout.css" />
+    <link rel="stylesheet" href="src/styles/components.css" />
+    <link rel="stylesheet" href="src/styles/public.css" />
+    <link rel="stylesheet" href="src/styles/auth.css" />
+  </head>
+  <body data-page="register">
+    <header id="site-header"></header>
+
+    <main>
+      <section class="auth-split">
+        <div class="auth-split__media">
+          <img
+            src="assets/images/auth-register.jpg"
+            alt="Gen Z streetwear model in cap, cropped graphic tee, backpack, and wide-leg cargo pants against concrete architecture"
+            class="auth-split__img"
+            loading="eager"
+          />
+          <div class="auth-split__scrim" aria-hidden="true"></div>
+          <div class="auth-split__media-inner">
+            <span class="eyebrow eyebrow--inverse">LOYALTY MEMBERSHIP</span>
+            <h1 class="auth-split__media-title">Join<br />Now</h1>
+            <p class="auth-split__media-copy">
+              Become a BONFREE-HUB member to unlock rewards, exclusive previews and member-only
+              benefits.
+            </p>
+          </div>
+        </div>
+
+        <div class="auth-split__panel">
+          <div class="auth-panel-box">
+            <div class="stack" style="gap: 0.35rem">
+              <h2 class="auth-panel-box__title">Create Your BONFREE-HUB Account</h2>
+              <p class="auth-panel-box__subtitle">
+                Join our loyalty program for a more rewarding shopping experience.
+              </p>
+            </div>
+
+            <div id="form-status-region" aria-live="polite"></div>
+
+            <form id="register-form" class="form-stack" novalidate>
+              <div class="field">
+                <label class="field__label" for="reg-name">
+                  Full Name <span class="field__required">*</span>
+                </label>
+                <div class="input-wrap">
+                  <span class="input-wrap__icon" data-icon="user" data-icon-size="16"></span>
+                  <input
+                    id="reg-name"
+                    name="fullName"
+                    type="text"
+                    class="input input--has-icon"
+                    placeholder="Full Name"
+                    autocomplete="name"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="reg-mobile">
+                  Mobile Number <span class="field__required">*</span>
+                </label>
+                <div class="input-wrap">
+                  <span class="input-wrap__icon" data-icon="phone" data-icon-size="16"></span>
+                  <input
+                    id="reg-mobile"
+                    name="mobile"
+                    type="tel"
+                    class="input input--has-icon"
+                    placeholder="+91 98765 43210"
+                    autocomplete="tel"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="reg-email">
+                  Email Address <span class="field__required">*</span>
+                </label>
+                <div class="input-wrap">
+                  <span class="input-wrap__icon" data-icon="mail" data-icon-size="16"></span>
+                  <input
+                    id="reg-email"
+                    name="email"
+                    type="email"
+                    class="input input--has-icon"
+                    placeholder="Email Address"
+                    autocomplete="email"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="reg-password">
+                  Password <span class="field__required">*</span>
+                </label>
+                <div class="input-wrap">
+                  <span class="input-wrap__icon" data-icon="lock" data-icon-size="16"></span>
+                  <input
+                    id="reg-password"
+                    name="password"
+                    type="password"
+                    class="input input--has-icon input--has-action"
+                    placeholder="Create Password"
+                    autocomplete="new-password"
+                    minlength="8"
+                    required
+                  />
+                  <button
+                    type="button"
+                    class="input-wrap__action"
+                    data-password-toggle="reg-password"
+                    aria-label="Show password"
+                  >
+                    <span data-icon="eye" data-icon-size="16"></span>
+                  </button>
+                </div>
+              </div>
+
+              <ul
+                id="reg-password-rules"
+                class="password-rules"
+                aria-label="Password requirements"
+              >
+                <li class="password-rule" data-rule="length">
+                  <span class="password-rule__dot" aria-hidden="true">✓</span>
+                  <span>At least 8 characters</span>
+                </li>
+                <li class="password-rule" data-rule="upper">
+                  <span class="password-rule__dot" aria-hidden="true">✓</span>
+                  <span>1 uppercase letter</span>
+                </li>
+                <li class="password-rule" data-rule="lower">
+                  <span class="password-rule__dot" aria-hidden="true">✓</span>
+                  <span>1 lowercase letter</span>
+                </li>
+                <li class="password-rule" data-rule="number">
+                  <span class="password-rule__dot" aria-hidden="true">✓</span>
+                  <span>1 numeric digit</span>
+                </li>
+              </ul>
+
+              <div class="field">
+                <label class="field__label" for="reg-confirm-password">
+                  Confirm Password <span class="field__required">*</span>
+                </label>
+                <div class="input-wrap">
+                  <span class="input-wrap__icon" data-icon="lock" data-icon-size="16"></span>
+                  <input
+                    id="reg-confirm-password"
+                    name="confirmPassword"
+                    type="password"
+                    class="input input--has-icon input--has-action"
+                    placeholder="Confirm Password"
+                    autocomplete="new-password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    class="input-wrap__action"
+                    data-password-toggle="reg-confirm-password"
+                    aria-label="Show password"
+                  >
+                    <span data-icon="eye" data-icon-size="16"></span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="terms-check" for="reg-terms">
+                  <input id="reg-terms" name="terms" type="checkbox" required />
+                  <span>
+                    I accept the
+                    <button type="button" class="auth-link" data-open-policy="terms">
+                      Loyalty Terms
+                    </button>
+                    and
+                    <button type="button" class="auth-link" data-open-policy="privacy">
+                      Privacy Policy
+                    </button>
+                    .
+                  </span>
+                </label>
+              </div>
+
+              <button type="submit" class="btn btn--primary btn--lg btn--block">JOIN NOW</button>
+            </form>
+
+            <p class="auth-switch-note">
+              Already have an account? <a href="login.html" class="auth-link">Sign In</a>
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer id="site-footer"></footer>
+
+    <script type="module" src="src/scripts/main.js"></script>
+  </body>
+</html>

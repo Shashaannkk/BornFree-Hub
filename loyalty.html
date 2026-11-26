@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="BONFREE-HUB Loyalty Club — Shop, collect 10 digital stamps, and redeem exclusive streetwear vouchers and member-only rewards."
+    />
+    <meta name="bonfree-env" content="development" />
+    <title>Loyalty Club &amp; How It Works — BONFREE-HUB</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="src/styles/tokens.css" />
+    <link rel="stylesheet" href="src/styles/reset.css" />
+    <link rel="stylesheet" href="src/styles/layout.css" />
+    <link rel="stylesheet" href="src/styles/components.css" />
+    <link rel="stylesheet" href="src/styles/public.css" />
+  </head>
+  <body data-page="loyalty">
+    <header id="site-header"></header>
+
+    <main>
+      <!-- 1. How It Works + Interactive Example Card (Reference 03) -->
+      <section id="how-it-works" class="section section--ivory">
+        <div class="container">
+          <div class="loyalty-hero-center">
+            <span class="eyebrow eyebrow--centered">THE BONFREE-HUB LOYALTY CLUB</span>
+            <h1 class="display-title" style="font-size: clamp(2.25rem, 4.2vw, 3.25rem)">
+              HOW IT WORKS
+            </h1>
+            <p class="text-sm text-muted">
+              Shop, collect stamps and unlock rewarding benefits in three simple steps.
+            </p>
+          </div>
+
+          <div class="how-it-works-split">
+            <!-- Three-Step Flow -->
+            <div class="steps-flow" aria-label="Three-step loyalty process">
+              <div class="step-node">
+                <div class="step-node__circle">
+                  <span data-icon="shopping-bag" data-icon-size="26"></span>
+                </div>
+                <div class="step-node__title">
+                  <span class="step-node__num">1</span>
+                  <span>SHOP</span>
+                </div>
+                <p class="text-xs text-muted">
+                  Make a purchase from BONFREE-HUB in-store or via verified channels.
+                </p>
+              </div>
+
+              <div class="step-arrow" aria-hidden="true">
+                <span data-icon="arrow-right" data-icon-size="18"></span>
+              </div>
+
+              <div class="step-node">
+                <div class="step-node__circle">
+                  <span data-icon="stamp" data-icon-size="26"></span>
+                </div>
+                <div class="step-node__title">
+                  <span class="step-node__num">2</span>
+                  <span>EARN</span>
+                </div>
+                <p class="text-xs text-muted">
+                  Get 1 stamp for every eligible purchase (e.g. ₹1,000 = 1 stamp).
+                </p>
+              </div>
+
+              <div class="step-arrow" aria-hidden="true">
+                <span data-icon="arrow-right" data-icon-size="18"></span>
+              </div>
+
+              <div class="step-node">
+                <div class="step-node__circle">
+                  <span data-icon="gift" data-icon-size="26"></span>
+                </div>
+                <div class="step-node__title">
+                  <span class="step-node__num">3</span>
+                  <span>REDEEM</span>
+                </div>
+                <p class="text-xs text-muted">
+                  Collect 10 stamps and unlock an exclusive ₹500 wardrobe reward.
+                </p>
+              </div>
+            </div>
+
+            <!-- Interactive Example Loyalty Card -->
+            <div class="example-card-panel">
+              <div class="example-card-panel__caption">YOUR LOYALTY CARD (EXAMPLE)</div>
+
+              <div class="example-loyalty-card">
+                <div class="example-loyalty-card__left">
+                  <div>
+                    <div class="loyalty-card__brand" style="font-size: 0.95rem">BONFREE-HUB</div>
+                    <div class="loyalty-card__sub">LOYALTY CLUB</div>
+                  </div>
+                  <span
+                    class="hero-loyalty-preview__botanical"
+                    data-icon="leaf"
+                    data-icon-size="72"
+                  ></span>
+                </div>
+
+                <div class="example-loyalty-card__right">
+                  <div class="between">
+                    <span class="hero-loyalty-preview__heading">
+                      Collect 10 Stamps &amp; Get a Reward
+                    </span>
+                    <span class="badge badge--dark" data-interactive-stamp-count>4 / 10 Stamps</span>
+                  </div>
+
+                  <div
+                    class="stamp-grid-5x2"
+                    data-interactive-stamps
+                    data-initial-stamps="4"
+                    role="group"
+                    aria-label="Interactive 10-stamp preview"
+                  ></div>
+
+                  <p class="text-xs text-muted" data-interactive-stamp-status></p>
+
+                  <div class="cluster">
+                    <button type="button" class="btn btn--primary btn--sm" data-stamp-add>
+                      + Add Sample Stamp
+                    </button>
+                    <button type="button" class="btn btn--outline-muted btn--sm" data-stamp-reset>
+                      Reset
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Horizontal Member Benefits Strip (Reference 03 Bottom) -->
+      <section aria-label="Member Benefits Summary">
+        <div class="container">
+          <div class="benefits-strip">
+            <h2 class="benefits-strip__title">Member<br />Benefits</h2>
+            <div class="benefits-strip__item">
+              <span data-icon="gift" data-icon-size="20"></span>
+              <span>Reward on 10 Stamps</span>
+            </div>
+            <div class="benefits-strip__item">
+              <span data-icon="tag" data-icon-size="20"></span>
+              <span>Exclusive Member-Only Offers</span>
+            </div>
+            <div class="benefits-strip__item">
+              <span data-icon="star" data-icon-size="20"></span>
+              <span>Early Access to New Collections</span>
+            </div>
+            <div class="benefits-strip__item">
+              <span data-icon="crown" data-icon-size="20"></span>
+              <span>Special Privileges &amp; Surprises</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Reward Examples -->
+      <section class="section" data-reveal>
+        <div class="container stack" style="gap: 2rem">
+          <div class="between">
+            <div class="stack" style="gap: 0.5rem">
+              <span class="eyebrow">REWARD CATALOGUE PREVIEW</span>
+              <h2 class="page-title">What Your Stamps Unlock</h2>
+            </div>
+            <a href="register.html" class="btn btn--primary">Join Now — Free</a>
+          </div>
+
+          <div class="benefits-grid">
+            <article class="benefit-card">
+              <span class="badge badge--dark" style="align-self: flex-start">10 Stamps</span>
+              <h3 class="benefit-card__title">₹500 Store Voucher</h3>
+              <p class="text-sm text-muted">
+                Redeemable on oversized tees, trendy shirts, cargos, baggy jeans, crop tops, and
+                outerwear.
+              </p>
+            </article>
+
+            <article class="benefit-card">
+              <span class="badge badge--neutral" style="align-self: flex-start">Member Perk</span>
+              <h3 class="benefit-card__title">2x Stamp Weekends</h3>
+              <p class="text-sm text-muted">
+                Earn double stamps during New Drop Rewards and Denim Days seasonal member campaigns.
+              </p>
+            </article>
+
+            <article class="benefit-card">
+              <span class="badge badge--neutral" style="align-self: flex-start">Birthday</span>
+              <h3 class="benefit-card__title">Birthday Bonus Stamp</h3>
+              <p class="text-sm text-muted">
+                Receive an extra celebratory stamp plus an exclusive member discount code during your
+                birthday week.
+              </p>
+            </article>
+
+            <article class="benefit-card">
+              <span class="badge badge--neutral" style="align-self: flex-start">Early Access</span>
+              <h3 class="benefit-card__title">48h Drop Preview</h3>
+              <p class="text-sm text-muted">
+                Reserve limited-batch streetwear pieces in-store before general public release.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Frequently Asked Questions -->
+      <section class="section section--ivory" data-reveal>
+        <div class="container stack" style="gap: 2rem; max-width: 900px">
+          <div class="stack" style="gap: 0.5rem">
+            <span class="eyebrow">QUESTIONS &amp; ANSWERS</span>
+            <h2 class="page-title">Frequently Asked Questions</h2>
+          </div>
+
+          <div class="faq-list">
+            <div class="faq-item">
+              <button
+                type="button"
+                class="faq-item__trigger"
+                id="faq-btn-1"
+                aria-expanded="true"
+                aria-controls="faq-panel-1"
+                data-faq-trigger
+              >
+                <span>How do I earn a stamp at BONFREE-HUB?</span>
+                <span class="faq-item__icon" data-icon="chevron-down" data-icon-size="18"></span>
+              </button>
+              <div class="faq-item__panel" id="faq-panel-1" role="region" aria-labelledby="faq-btn-1">
+                Show your digital BONFREE-HUB Membership ID or QR pass at checkout. Every
+                qualifying purchase of ₹1,000 or more earns 1 digital stamp (or 2 stamps during
+                2x multiplier campaigns).
+              </div>
+            </div>
+
+            <div class="faq-item">
+              <button
+                type="button"
+                class="faq-item__trigger"
+                id="faq-btn-2"
+                aria-expanded="false"
+                aria-controls="faq-panel-2"
+                data-faq-trigger
+              >
+                <span>Do I need to shop online on this site to earn stamps?</span>
+                <span class="faq-item__icon" data-icon="chevron-down" data-icon-size="18"></span>
+              </button>
+              <div
+                class="faq-item__panel"
+                id="faq-panel-2"
+                role="region"
+                aria-labelledby="faq-btn-2"
+                hidden
+              >
+                No. BONFREE-HUB is a dedicated loyalty and rewards hub—not an online checkout store.
+                Store associates record your qualifying purchases directly onto your digital stamp
+                ledger.
+              </div>
+            </div>
+
+            <div class="faq-item">
+              <button
+                type="button"
+                class="faq-item__trigger"
+                id="faq-btn-3"
+                aria-expanded="false"
+                aria-controls="faq-panel-3"
+                data-faq-trigger
+              >
+                <span>What happens when I collect 10 stamps?</span>
+                <span class="faq-item__icon" data-icon="chevron-down" data-icon-size="18"></span>
+              </button>
+              <div
+                class="faq-item__panel"
+                id="faq-panel-3"
+                role="region"
+                aria-labelledby="faq-btn-3"
+                hidden
+              >
+                Once your balance reaches 10 stamps, you can unlock a ₹500 BONFREE-HUB reward
+                voucher inside your member dashboard and redeem it on your next visit.
+              </div>
+            </div>
+
+            <div class="faq-item">
+              <button
+                type="button"
+                class="faq-item__trigger"
+                id="faq-btn-4"
+                aria-expanded="false"
+                aria-controls="faq-panel-4"
+                data-faq-trigger
+              >
+                <span>Do stamps or redeemed vouchers expire?</span>
+                <span class="faq-item__icon" data-icon="chevron-down" data-icon-size="18"></span>
+              </button>
+              <div
+                class="faq-item__panel"
+                id="faq-panel-4"
+                role="region"
+                aria-labelledby="faq-btn-4"
+                hidden
+              >
+                Under standard BONFREE-HUB loyalty rules, stamps remain valid for 12 months from the
+                date earned, and issued reward vouchers remain valid for 6 months.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Final Join CTA -->
+      <section class="section section--dark" data-reveal>
+        <div class="container between" style="flex-wrap: wrap">
+          <div class="stack" style="gap: 0.5rem">
+            <span class="eyebrow eyebrow--inverse">START COLLECTING TODAY</span>
+            <h2 class="page-title" style="color: var(--color-white)">
+              Ready to Unlock Your First Reward?
+            </h2>
+            <p class="text-sm" style="color: var(--color-text-inverse-muted)">
+              Join the BONFREE-HUB Loyalty Club in seconds and carry your digital stamp card
+              everywhere.
+            </p>
+          </div>
+          <div class="cluster">
+            <a href="register.html" class="btn btn--secondary btn--lg">Join Now</a>
+            <a href="login.html" class="btn btn--outline-muted btn--lg">Member Login</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer id="site-footer"></footer>
+
+    <script type="module" src="src/scripts/main.js"></script>
+  </body>
+</html>

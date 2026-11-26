@@ -1,0 +1,14 @@
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+
+# Dependencies & tooling
+node_modules/
+.vercel/
+.supabase/
+
+# OS & editor files
+.DS_Store
+Thumbs.db
+*.log

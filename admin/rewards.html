@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="BONFREE-HUB Rewards Management — Configure fixed discounts, percentage offers, free products, birthday perks, and exclusive drops."
+    />
+    <meta name="bonfree-env" content="development" />
+    <title>Rewards — BONFREE-HUB Admin Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../src/styles/tokens.css" />
+    <link rel="stylesheet" href="../src/styles/reset.css" />
+    <link rel="stylesheet" href="../src/styles/layout.css" />
+    <link rel="stylesheet" href="../src/styles/components.css" />
+    <link rel="stylesheet" href="../src/styles/auth.css" />
+    <link rel="stylesheet" href="../src/styles/admin.css" />
+  </head>
+  <body data-page="admin-rewards">
+    <div class="admin-shell">
+      <aside id="admin-sidebar-host"></aside>
+
+      <div class="admin-main">
+        <header id="admin-topbar-host"></header>
+
+        <main class="admin-content">
+          <div class="admin-page-head">
+            <div class="stack" style="gap: 0.25rem">
+              <span class="eyebrow">REWARDS CATALOGUE</span>
+              <h1 class="page-title">Rewards</h1>
+              <p class="text-sm text-muted">
+                Modern streetwear &amp; everyday fashion rewards for BONFREE-HUB loyalty members.
+              </p>
+            </div>
+
+            <div class="cluster">
+              <select
+                id="rewards-type-filter"
+                class="select"
+                style="width: auto"
+                aria-label="Filter reward type"
+              >
+                <option value="all">All Reward Types</option>
+                <option value="Fixed Discount">Fixed Discount</option>
+                <option value="Percentage Discount">Percentage Discount</option>
+                <option value="Free Product">Free Product</option>
+                <option value="Birthday Reward">Birthday Reward</option>
+                <option value="Exclusive Member Offer">Exclusive Member Offer</option>
+              </select>
+              <button type="button" id="create-reward-btn" class="btn btn--primary">
+                + Create Reward
+              </button>
+            </div>
+          </div>
+
+          <div id="admin-rewards-grid" class="rewards-admin-grid"></div>
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="../src/scripts/adminMain.js"></script>
+  </body>
+</html>

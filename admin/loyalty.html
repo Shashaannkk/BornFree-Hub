@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="BONFREE-HUB Admin Loyalty Programmes — Configure qualifying spend, stamp goals, calculation rules, reward levels, and validity."
+    />
+    <meta name="bonfree-env" content="development" />
+    <title>Loyalty Programmes — BONFREE-HUB Admin Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../src/styles/tokens.css" />
+    <link rel="stylesheet" href="../src/styles/reset.css" />
+    <link rel="stylesheet" href="../src/styles/layout.css" />
+    <link rel="stylesheet" href="../src/styles/components.css" />
+    <link rel="stylesheet" href="../src/styles/auth.css" />
+    <link rel="stylesheet" href="../src/styles/admin.css" />
+  </head>
+  <body data-page="admin-loyalty">
+    <div class="admin-shell">
+      <aside id="admin-sidebar-host"></aside>
+
+      <div class="admin-main">
+        <header id="admin-topbar-host"></header>
+
+        <main class="admin-content">
+          <div class="admin-page-head">
+            <div class="stack" style="gap: 0.25rem">
+              <span class="eyebrow">LOYALTY</span>
+              <h1 class="page-title">Loyalty Programmes</h1>
+              <p class="text-sm text-muted">
+                Create and manage stamp-based loyalty programmes, qualifying spend, and reward
+                levels.
+              </p>
+            </div>
+
+            <button type="button" id="create-programme-btn" class="btn btn--primary">
+              + Create Programme
+            </button>
+          </div>
+
+          <div class="programme-master-detail">
+            <!-- Left Programmes List -->
+            <section class="card stack" aria-label="Loyalty Programmes List">
+              <div class="between">
+                <h2 class="card__title">Programmes (4)</h2>
+              </div>
+              <div id="programme-list-host" class="programme-list"></div>
+            </section>
+
+            <!-- Right Programme Editor -->
+            <form id="programme-editor-form" class="card stack" novalidate>
+              <div class="between" style="flex-wrap: wrap">
+                <h2 id="programme-editor-title" class="card__title">Edit Programme</h2>
+                <div class="cluster">
+                  <button type="button" id="cancel-programme-btn" class="btn btn--outline-muted btn--sm">
+                    Cancel
+                  </button>
+                  <button type="submit" class="btn btn--primary btn--sm">Save Changes</button>
+                </div>
+              </div>
+
+              <div id="programme-save-status" aria-live="polite"></div>
+
+              <div class="grid grid-2">
+                <div class="field">
+                  <label class="field__label" for="prog-name">
+                    Programme Name <span class="field__required">*</span>
+                  </label>
+                  <input id="prog-name" name="name" type="text" class="input" required />
+                </div>
+
+                <div class="field">
+                  <label class="field__label" for="prog-status">Status</label>
+                  <select id="prog-status" name="status" class="select">
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="prog-description">Description</label>
+                <textarea id="prog-description" name="description" class="textarea" rows="2"></textarea>
+              </div>
+
+              <div class="grid grid-3">
+                <div class="field">
+                  <label class="field__label" for="prog-stamp-goal">
+                    Required Stamp Count <span class="field__required">*</span>
+                  </label>
+                  <input
+                    id="prog-stamp-goal"
+                    name="stampGoal"
+                    type="number"
+                    min="1"
+                    class="input"
+                    required
+                  />
+                  <span class="field__hint">Stamps needed to complete a full reward card.</span>
+                </div>
+
+                <div class="field">
+                  <label class="field__label" for="prog-qualifying-amount">
+                    Qualifying Purchase (₹) <span class="field__required">*</span>
+                  </label>
+                  <input
+                    id="prog-qualifying-amount"
+                    name="qualifyingAmountInr"
+                    type="number"
+                    min="100"
+                    class="input"
+                    required
+                  />
+                  <span class="field__hint">Minimum transaction spend to earn 1 stamp.</span>
+                </div>
+
+                <div class="field">
+                  <label class="field__label" for="prog-calc-rule">Stamp Calculation Rule</label>
+                  <select id="prog-calc-rule" name="calculationRule" class="select">
+                    <option value="per_threshold">1 stamp per ₹ threshold</option>
+                    <option value="per_transaction">1 stamp per qualifying order</option>
+                    <option value="multiplier_2x">2x promotional stamp multiplier</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid grid-3">
+                <div class="field">
+                  <label class="field__label" for="prog-stamp-validity">Stamp Validity (Months)</label>
+                  <input id="prog-stamp-validity" name="stampValidityMonths" type="number" min="1" class="input" />
+                </div>
+
+                <div class="field">
+                  <label class="field__label" for="prog-reward-validity">Reward Validity (Months)</label>
+                  <input id="prog-reward-validity" name="rewardValidityMonths" type="number" min="1" class="input" />
+                </div>
+
+                <div class="field">
+                  <label class="field__label" for="prog-eligibility">Eligibility Rule</label>
+                  <input id="prog-eligibility" name="eligibility" type="text" class="input" />
+                </div>
+              </div>
+
+              <div class="stack" style="gap: 0.75rem; padding-top: 0.5rem; border-top: 1px solid var(--border-subtle)">
+                <div class="between">
+                  <div>
+                    <strong class="text-sm">Reward Levels</strong>
+                    <div class="text-xs text-muted">Configure milestone stamp targets and reward titles.</div>
+                  </div>
+                  <button type="button" id="add-reward-tier-btn" class="btn btn--outline-muted btn--sm">
+                    + Add Reward Level
+                  </button>
+                </div>
+                <div id="programme-tiers-host" class="stack"></div>
+              </div>
+            </form>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="../src/scripts/adminMain.js"></script>
+  </body>
+</html>

@@ -1,0 +1,723 @@
+/* ==========================================================================
+   BONFREE-HUB Admin & Staff Console Styles (Phase 2A)
+   Matches approved monochrome admin reference layouts.
+   ========================================================================== */
+
+/* Admin Login Split (Reference: Admin Login) */
+.admin-login-split {
+  display: grid;
+  grid-template-columns: 0.92fr 1.08fr;
+  min-height: 100vh;
+  background-color: var(--color-white);
+}
+
+.admin-login-split__brand {
+  background-color: var(--color-black);
+  color: var(--color-white);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--space-10) var(--space-10) 0 var(--space-10);
+  overflow: hidden;
+}
+
+.admin-login-split__copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.admin-login-split__rule {
+  width: 36px;
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.35);
+}
+
+.admin-login-split__tagline {
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 3.2vw, 2.75rem);
+  font-weight: 500;
+  line-height: 1.12;
+  color: var(--color-white);
+}
+
+.admin-login-split__meta {
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-text-inverse-muted);
+}
+
+.admin-login-split__photo {
+  margin-top: var(--space-6);
+  margin-inline: calc(var(--space-10) * -1);
+  height: 260px;
+  overflow: hidden;
+}
+
+.admin-login-split__photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  filter: grayscale(100%) contrast(1.08);
+}
+
+.admin-login-split__panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-10);
+  background-color: var(--color-white);
+}
+
+/* Fixed Black Sidebar Admin Shell */
+.admin-shell {
+  display: grid;
+  grid-template-columns: 256px minmax(0, 1fr);
+  min-height: 100vh;
+  background-color: var(--color-ivory);
+}
+
+.admin-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  background-color: var(--color-black);
+  color: var(--color-white);
+  border-right: 1px solid var(--color-graphite);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--space-5) var(--space-3);
+  overflow-y: auto;
+}
+
+.admin-sidebar__header {
+  padding: 0 var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-graphite);
+  margin-bottom: var(--space-3);
+}
+
+.admin-sidebar__sub {
+  font-size: 0.625rem;
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--color-text-inverse-muted);
+  margin-top: 2px;
+}
+
+.admin-sidebar__groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  flex: 1;
+}
+
+.admin-nav-group__label {
+  padding-inline: var(--space-3);
+  margin-bottom: var(--space-1);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7c7c7c;
+}
+
+.admin-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-nav-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 0.5rem var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-inverse-muted);
+  text-align: left;
+  transition: background-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.admin-nav-link__left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.admin-nav-link:hover {
+  background-color: var(--color-charcoal);
+  color: var(--color-white);
+}
+
+.admin-nav-link.is-active {
+  background-color: var(--color-white);
+  color: var(--color-black);
+  font-weight: 600;
+}
+
+.admin-nav-link__tag {
+  font-size: 0.625rem;
+  padding: 1px 5px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--color-graphite);
+  color: #8f8f8f;
+}
+
+.admin-sidebar__footer {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-graphite);
+  margin-top: var(--space-3);
+}
+
+/* Admin Main & Topbar */
+.admin-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background-color: var(--color-white);
+}
+
+.admin-topbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+  height: var(--header-height);
+  background-color: var(--color-white);
+  border-bottom: 1px solid var(--border-default);
+  padding-inline: var(--space-8);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.admin-topbar__left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 1;
+  max-width: 520px;
+}
+
+.admin-search-box {
+  position: relative;
+  width: 100%;
+}
+
+.admin-search-box .input {
+  height: 38px;
+  padding-left: 2.25rem;
+  background-color: var(--color-ivory);
+}
+
+.admin-topbar__right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.admin-account-wrap {
+  position: relative;
+}
+
+.admin-account-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  background-color: var(--color-white);
+}
+
+.admin-account-btn:hover {
+  border-color: var(--color-black);
+}
+
+.admin-account-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  width: 210px;
+  background-color: var(--color-white);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-2);
+  z-index: var(--z-drawer);
+}
+
+.admin-account-menu[hidden] {
+  display: none;
+}
+
+.admin-account-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 0.5rem var(--space-3);
+  border-radius: var(--radius-xs);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  text-align: left;
+}
+
+.admin-account-menu__item:hover {
+  background-color: var(--color-ivory);
+}
+
+/* Admin Workspace Content */
+.admin-content {
+  padding: var(--space-8);
+  flex: 1;
+  background-color: var(--color-white);
+}
+
+.admin-page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+/* Overview Charts & Activity Grid */
+.admin-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.admin-overview-split {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: var(--space-6);
+}
+
+.chart-svg {
+  width: 100%;
+  height: 210px;
+  overflow: visible;
+}
+
+/* Customers Filter Toolbar */
+.filter-toolbar {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr auto auto;
+  gap: var(--space-3);
+  align-items: center;
+  background-color: var(--color-ivory);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+/* Loyalty Programmes Master-Detail (Reference: Loyalty Programmes) */
+.programme-master-detail {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.programme-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.programme-list-item {
+  width: 100%;
+  text-align: left;
+  background-color: var(--color-white);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  transition: border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+}
+
+.programme-list-item:hover {
+  border-color: var(--color-black);
+}
+
+.programme-list-item.is-selected {
+  border-color: var(--color-black);
+  border-width: 1.5px;
+  background-color: var(--color-ivory);
+}
+
+.reward-tier-row {
+  display: grid;
+  grid-template-columns: 120px 1fr 1fr auto;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3);
+  background-color: var(--color-ivory);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+/* Responsive Admin Breakpoints */
+@media (max-width: 1180px) {
+  .filter-toolbar {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .programme-master-detail {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1024px) {
+  .admin-login-split {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-login-split__photo {
+    height: 200px;
+  }
+
+  .admin-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-sidebar {
+    display: none;
+  }
+
+  .admin-topbar {
+    padding-inline: var(--space-4);
+  }
+
+  .admin-content {
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .admin-kpi-grid,
+  .admin-overview-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .filter-toolbar,
+  .reward-tier-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Phase 2B: QR Scanner, Stamp Transactions, Rewards & Redemptions
+   -------------------------------------------------------------------------- */
+.scanner-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.scanner-viewport-wrap {
+  position: relative;
+  background-color: var(--color-black);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: var(--color-white);
+}
+
+.scanner-reader-host {
+  width: 100%;
+  min-height: 280px;
+}
+
+.scanner-frame-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4);
+}
+
+.scanner-reticle {
+  width: 184px;
+  height: 184px;
+  border: 2px dashed rgba(255, 255, 255, 0.72);
+  border-radius: var(--radius-md);
+  margin: auto;
+}
+
+.scanner-customer-box {
+  background-color: var(--color-ivory);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.stamp-preview-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-ivory);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+}
+
+.rewards-admin-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-5);
+}
+
+.reward-admin-card {
+  background-color: var(--color-white);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-4);
+  transition: border-color var(--duration-fast) var(--ease-standard);
+}
+
+.reward-admin-card:hover {
+  border-color: var(--color-black);
+}
+
+.stamps-toolbar {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr auto auto;
+  gap: var(--space-3);
+  align-items: center;
+  background-color: var(--color-ivory);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+@media (max-width: 1180px) {
+  .rewards-admin-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stamps-toolbar {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 1024px) {
+  .scanner-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .rewards-admin-grid,
+  .stamps-toolbar {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Phase 2C & 2D: Purchases, Staff, Campaigns, Surveys, Analytics, Reports & Settings
+   -------------------------------------------------------------------------- */
+.campaigns-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+}
+
+.campaign-card {
+  background-color: var(--color-white);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.campaign-card__top {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.campaign-card__thumb {
+  width: 112px;
+  height: 112px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default);
+  object-fit: cover;
+  filter: grayscale(100%) contrast(1.06);
+}
+
+.campaign-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Survey 3-Column Builder (Reference 06D) */
+.survey-builder-grid {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr) 260px;
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.survey-palette {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.survey-question-card {
+  background-color: var(--color-ivory);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.meter-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.meter-track {
+  width: 100%;
+  height: 7px;
+  background-color: var(--border-subtle);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.meter-track__fill {
+  height: 100%;
+  background-color: var(--color-black);
+}
+
+/* Star Rating Control (Admin Preview + Customer Survey) */
+.star-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.star-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-default);
+  background-color: var(--color-white);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+}
+
+.star-btn.is-selected {
+  background-color: var(--color-black);
+  border-color: var(--color-black);
+  color: var(--color-white);
+}
+
+/* Settings 2x2 Grid (Reference 07C) */
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+}
+
+.setting-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-block: var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.setting-toggle-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+/* Reports Filter Bar */
+.reports-toolbar {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.2fr 1fr auto;
+  gap: var(--space-3);
+  align-items: end;
+  background-color: var(--color-ivory);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+@media (max-width: 1180px) {
+  .survey-builder-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .reports-toolbar {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 1024px) {
+  .campaigns-grid,
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .campaign-card__top,
+  .reports-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .campaign-card__thumb {
+    width: 100%;
+    height: 160px;
+  }
+}

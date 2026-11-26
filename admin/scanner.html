@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="BONFREE-HUB QR Scanner — Scan member QR codes, verify qualifying purchases, and preview stamp awards."
+    />
+    <meta name="bonfree-env" content="development" />
+    <title>QR Scanner — BONFREE-HUB Admin Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../src/styles/tokens.css" />
+    <link rel="stylesheet" href="../src/styles/reset.css" />
+    <link rel="stylesheet" href="../src/styles/layout.css" />
+    <link rel="stylesheet" href="../src/styles/components.css" />
+    <link rel="stylesheet" href="../src/styles/auth.css" />
+    <link rel="stylesheet" href="../src/styles/admin.css" />
+  </head>
+  <body data-page="admin-scanner">
+    <div class="admin-shell">
+      <aside id="admin-sidebar-host"></aside>
+
+      <div class="admin-main">
+        <header id="admin-topbar-host"></header>
+
+        <main class="admin-content">
+          <div class="admin-page-head">
+            <div class="stack" style="gap: 0.25rem">
+              <span class="eyebrow">STORE POS OPERATIONS</span>
+              <h1 class="page-title">QR Scanner</h1>
+              <p class="text-sm text-muted">
+                Scan customer QR to verify qualifying purchase and submit stamp award requests.
+              </p>
+            </div>
+            <span id="scanner-camera-status" class="badge badge--neutral">Camera Idle</span>
+          </div>
+
+          <div class="scanner-grid">
+            <!-- Left Column: Camera Viewport & Controls -->
+            <section class="card stack" aria-label="QR Camera Scanner">
+              <div class="between">
+                <h2 class="card__title">Camera Preview</h2>
+                <div class="cluster">
+                  <button type="button" id="scanner-start-btn" class="btn btn--primary btn--sm">
+                    Start Scanner
+                  </button>
+                  <button
+                    type="button"
+                    id="scanner-stop-btn"
+                    class="btn btn--outline-muted btn--sm"
+                    disabled
+                  >
+                    Stop Scanner
+                  </button>
+                </div>
+              </div>
+
+              <div id="scanner-camera-alert" aria-live="polite"></div>
+
+              <div class="scanner-viewport-wrap">
+                <div id="qr-reader" class="scanner-reader-host"></div>
+                <div class="scanner-frame-overlay" aria-hidden="true">
+                  <div class="scanner-reticle"></div>
+                  <span class="text-xs" style="color: rgba(255, 255, 255, 0.8)">
+                    Align member QR code inside frame
+                  </span>
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="scanner-dev-preset">
+                  Simulate QR Scan (Dev Preview Preset)
+                </label>
+                <select id="scanner-dev-preset" class="select">
+                  <option value="">Select member QR payload to test...</option>
+                  <option value="BF-001248">BF-001248 — Aanya Sharma (Classic Stamps)</option>
+                  <option value="BF-011234">BF-011234 — Ishaan Mehta (Premium Circle)</option>
+                  <option value="BF-011009">BF-011009 — Kavya Iyer (Classic Stamps)</option>
+                </select>
+              </div>
+            </section>
+
+            <!-- Right Column: Manual Lookup, Customer Panel & Award Stamps -->
+            <section class="card stack" aria-label="Customer Verification and Stamp Calculation">
+              <form id="scanner-lookup-form" class="stack" style="gap: 0.75rem" novalidate>
+                <label class="field__label" for="scanner-lookup-input">
+                  Manual Customer Lookup
+                </label>
+                <div class="cluster" style="flex-wrap: nowrap">
+                  <input
+                    id="scanner-lookup-input"
+                    type="search"
+                    class="input"
+                    placeholder="Search by Membership ID (BF-...), email or phone"
+                    aria-label="Search customer by ID, email or phone"
+                  />
+                  <button type="submit" class="btn btn--secondary">Find</button>
+                </div>
+              </form>
+
+              <div id="scanner-customer-panel" aria-live="polite"></div>
+
+              <form id="scanner-award-form" class="form-stack" novalidate>
+                <div id="scanner-award-status" aria-live="polite"></div>
+
+                <div class="grid grid-2">
+                  <div class="field">
+                    <label class="field__label" for="scanner-purchase-ref">
+                      Purchase Reference <span class="field__required">*</span>
+                    </label>
+                    <input
+                      id="scanner-purchase-ref"
+                      name="purchaseRef"
+                      type="text"
+                      class="input"
+                      placeholder="e.g. INV-CP-43901 (or INV-CP-43579 for duplicate)"
+                      required
+                    />
+                  </div>
+
+                  <div class="field">
+                    <label class="field__label" for="scanner-purchase-amount">
+                      Purchase Amount (₹) <span class="field__required">*</span>
+                    </label>
+                    <input
+                      id="scanner-purchase-amount"
+                      name="purchaseAmount"
+                      type="number"
+                      min="1"
+                      class="input"
+                      placeholder="e.g. 2499"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div class="stamp-preview-box">
+                  <div>
+                    <div class="text-xs text-muted">Calculated Eligible Stamps (Read-Only)</div>
+                    <strong class="text-sm">Computed from active programme rules</strong>
+                  </div>
+                  <span id="scanner-calculated-stamps" class="badge badge--dark">0 Stamps</span>
+                </div>
+
+                <button type="submit" class="btn btn--primary btn--lg btn--block">
+                  AWARD STAMPS
+                </button>
+              </form>
+            </section>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script src="../assets/vendor/html5-qrcode.min.js"></script>
+    <script type="module" src="../src/scripts/adminMain.js"></script>
+  </body>
+</html>

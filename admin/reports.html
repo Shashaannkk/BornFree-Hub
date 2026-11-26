@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="BONFREE-HUB Reports — Generate, preview, and export customer, stamp, purchase, redemption, staff, and programme reports."
+    />
+    <meta name="bonfree-env" content="development" />
+    <title>Reports — BONFREE-HUB Admin Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../src/styles/tokens.css" />
+    <link rel="stylesheet" href="../src/styles/reset.css" />
+    <link rel="stylesheet" href="../src/styles/layout.css" />
+    <link rel="stylesheet" href="../src/styles/components.css" />
+    <link rel="stylesheet" href="../src/styles/auth.css" />
+    <link rel="stylesheet" href="../src/styles/admin.css" />
+  </head>
+  <body data-page="admin-reports">
+    <div class="admin-shell">
+      <aside id="admin-sidebar-host"></aside>
+
+      <div class="admin-main">
+        <header id="admin-topbar-host"></header>
+
+        <main class="admin-content">
+          <div class="admin-page-head">
+            <div class="stack" style="gap: 0.25rem">
+              <span class="eyebrow">DATA EXPORTS</span>
+              <h1 class="page-title">Reports</h1>
+              <p class="text-sm text-muted">
+                Generate, preview, and export BONFREE-HUB loyalty program reports.
+              </p>
+            </div>
+          </div>
+
+          <div class="stack" style="gap: 1.25rem">
+            <div class="reports-toolbar">
+              <div class="field">
+                <label class="field__label" for="rep-date-from">From Date</label>
+                <input id="rep-date-from" type="date" class="input" value="2025-01-01" />
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="rep-date-to">To Date</label>
+                <input id="rep-date-to" type="date" class="input" value="2025-01-31" />
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="rep-category">Report Category</label>
+                <select id="rep-category" class="select">
+                  <option value="customer-registration">Customer Registration</option>
+                  <option value="customer-activity" selected>Customer Activity</option>
+                  <option value="stamp-transactions">Stamp Transactions</option>
+                  <option value="purchases">Purchases</option>
+                  <option value="redemptions">Reward Redemptions</option>
+                  <option value="staff-activity">Staff Activity</option>
+                  <option value="programme-performance">Loyalty Programme Performance</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="rep-type">Report Type</label>
+                <select id="rep-type" class="select">
+                  <option value="Summary">Summary</option>
+                  <option value="Detailed">Detailed</option>
+                </select>
+              </div>
+
+              <button type="button" id="rep-export-csv-btn" class="btn btn--primary">
+                Export CSV
+              </button>
+            </div>
+
+            <h2 id="reports-preview-title" class="card__title">Report Preview</h2>
+
+            <div id="reports-preview-table"></div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="../src/scripts/adminMain.js"></script>
+  </body>
+</html>

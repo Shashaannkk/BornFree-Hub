@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="BONFREE-HUB Redemptions — Verify voucher codes and confirm or reject customer loyalty reward redemptions."
+    />
+    <meta name="bonfree-env" content="development" />
+    <title>Redemptions — BONFREE-HUB Admin Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../src/styles/tokens.css" />
+    <link rel="stylesheet" href="../src/styles/reset.css" />
+    <link rel="stylesheet" href="../src/styles/layout.css" />
+    <link rel="stylesheet" href="../src/styles/components.css" />
+    <link rel="stylesheet" href="../src/styles/auth.css" />
+    <link rel="stylesheet" href="../src/styles/admin.css" />
+  </head>
+  <body data-page="admin-redemptions">
+    <div class="admin-shell">
+      <aside id="admin-sidebar-host"></aside>
+
+      <div class="admin-main">
+        <header id="admin-topbar-host"></header>
+
+        <main class="admin-content">
+          <div class="admin-page-head">
+            <div class="stack" style="gap: 0.25rem">
+              <span class="eyebrow">VOUCHER VERIFICATION</span>
+              <h1 class="page-title">Redemptions</h1>
+              <p class="text-sm text-muted">
+                Verify voucher codes and manage pending, completed, expired, and rejected loyalty
+                redemptions.
+              </p>
+            </div>
+          </div>
+
+          <div class="stack" style="gap: 1.25rem">
+            <div id="redemptions-tabs" class="tabs" role="tablist" aria-label="Redemption status"></div>
+
+            <div class="filter-toolbar" style="grid-template-columns: 1.5fr 1fr auto">
+              <input
+                id="redemptions-search"
+                type="search"
+                class="input"
+                placeholder="Lookup voucher code (BFH-...), customer name, ID or phone..."
+                aria-label="Lookup voucher code or customer"
+              />
+              <select id="redemptions-reward-filter" class="select" aria-label="Filter by reward">
+                <option value="all">All Rewards</option>
+                <option value="₹500 Off Store Voucher">₹500 Off Store Voucher</option>
+                <option value="Streetwear Insider — 15% Off">Streetwear Insider — 15% Off</option>
+                <option value="Complimentary Graphic Tee">Complimentary Graphic Tee</option>
+                <option value="Birthday Month Streetwear Perk">
+                  Birthday Month Streetwear Perk
+                </option>
+              </select>
+              <button type="button" id="redemptions-apply-btn" class="btn btn--primary">Apply</button>
+            </div>
+
+            <div id="admin-redemptions-table"></div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="../src/scripts/adminMain.js"></script>
+  </body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Share your feedback on BONFREE-HUB Gen Z streetwear collections and digital loyalty rewards."
+    />
+    <meta name="bonfree-env" content="development" />
+    <title>Member Feedback Survey — BONFREE-HUB</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="src/styles/tokens.css" />
+    <link rel="stylesheet" href="src/styles/reset.css" />
+    <link rel="stylesheet" href="src/styles/layout.css" />
+    <link rel="stylesheet" href="src/styles/components.css" />
+    <link rel="stylesheet" href="src/styles/public.css" />
+    <link rel="stylesheet" href="src/styles/admin.css" />
+  </head>
+  <body data-page="loyalty">
+    <header id="site-header"></header>
+
+    <main class="section section--ivory">
+      <div class="container" style="max-width: 720px">
+        <div class="card stack" style="gap: 1.5rem">
+          <div class="stack" style="gap: 0.4rem">
+            <span class="eyebrow">BONFREE-HUB MEMBER FEEDBACK</span>
+            <h1 class="page-title">Modern Streetwear &amp; Everyday Fashion</h1>
+            <p class="text-sm text-muted">
+              Help us improve future drops and loyalty perks by answering 4 quick questions.
+            </p>
+          </div>
+
+          <div id="survey-status-region" aria-live="polite"></div>
+
+          <form id="customer-survey-form" class="form-stack" novalidate>
+            <div class="field">
+              <label class="field__label">
+                1. How would you rate your overall shopping &amp; loyalty experience?
+                <span class="field__required">*</span>
+              </label>
+              <input id="survey-rating-value" name="rating" type="hidden" required />
+              <div class="star-rating" role="group" aria-label="Star rating 1 to 5">
+                <button type="button" class="star-btn" data-survey-star="1" aria-pressed="false" aria-label="1 star">
+                  <span data-icon="star" data-icon-size="16"></span>
+                </button>
+                <button type="button" class="star-btn" data-survey-star="2" aria-pressed="false" aria-label="2 stars">
+                  <span data-icon="star" data-icon-size="16"></span>
+                </button>
+                <button type="button" class="star-btn" data-survey-star="3" aria-pressed="false" aria-label="3 stars">
+                  <span data-icon="star" data-icon-size="16"></span>
+                </button>
+                <button type="button" class="star-btn" data-survey-star="4" aria-pressed="false" aria-label="4 stars">
+                  <span data-icon="star" data-icon-size="16"></span>
+                </button>
+                <button type="button" class="star-btn" data-survey-star="5" aria-pressed="false" aria-label="5 stars">
+                  <span data-icon="star" data-icon-size="16"></span>
+                </button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="srv-favorite">
+                2. What do you like the most about our collections?
+                <span class="field__required">*</span>
+              </label>
+              <select id="srv-favorite" name="favoriteCollection" class="select" required>
+                <option value="">Select your favorite category</option>
+                <option value="Oversized tees & casual basics">Oversized tees &amp; casual basics</option>
+                <option value="Trendy boxy shirts">Trendy boxy shirts</option>
+                <option value="Cargos & baggy jeans">Cargos &amp; baggy jeans</option>
+                <option value="Layered jackets & crop tops">Layered jackets &amp; crop tops</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="srv-restock">
+                3. Which streetwear fit or colourway should we restock next?
+                <span class="field__required">*</span>
+              </label>
+              <input
+                id="srv-restock"
+                name="restockIdea"
+                type="text"
+                class="input"
+                placeholder="e.g. Heavyweight charcoal cargo pants"
+                required
+              />
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="srv-notes">
+                4. Any suggestions to make your BONFREE-HUB loyalty rewards even better?
+              </label>
+              <textarea
+                id="srv-notes"
+                name="suggestions"
+                class="textarea"
+                placeholder="Share your thoughts..."
+              ></textarea>
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--lg btn--block">
+              SUBMIT SURVEY
+            </button>
+          </form>
+        </div>
+      </div>
+    </main>
+
+    <footer id="site-footer"></footer>
+
+    <script type="module" src="src/scripts/main.js"></script>
+  </body>
+</html>

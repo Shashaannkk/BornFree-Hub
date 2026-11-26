@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="BONFREE-HUB Digital Loyalty & Rewards Club — Modern streetwear & everyday fashion for young men and women. Shop more, collect stamps, and earn exclusive member rewards."
+    />
+    <meta name="bonfree-env" content="development" />
+    <title>BONFREE-HUB — Shop More. Earn More. | Streetwear Loyalty Club</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="src/styles/tokens.css" />
+    <link rel="stylesheet" href="src/styles/reset.css" />
+    <link rel="stylesheet" href="src/styles/layout.css" />
+    <link rel="stylesheet" href="src/styles/components.css" />
+    <link rel="stylesheet" href="src/styles/public.css" />
+  </head>
+  <body data-page="home">
+    <header id="site-header"></header>
+
+    <main>
+      <!-- 1. Split Editorial Hero (Reference 01) -->
+      <section class="hero-split">
+        <div class="container hero-split__grid">
+          <div class="hero-split__content">
+            <span class="eyebrow">THE BONFREE-HUB LOYALTY CLUB</span>
+
+            <h1 class="hero-split__headline">SHOP MORE.<br />EARN MORE.</h1>
+
+            <p class="hero-split__copy">
+              Modern streetwear &amp; everyday fashion for young men and women. Shop contemporary
+              Gen Z styles — oversized tees, trendy shirts, cargos, baggy jeans, crop tops,
+              relaxed trousers, layered jackets and sneakers.
+            </p>
+
+            <div class="cluster">
+              <a href="register.html" class="btn btn--primary btn--lg">Join Now</a>
+              <a href="loyalty.html" class="btn btn--secondary btn--lg">Explore Rewards</a>
+            </div>
+
+            <div class="hero-split__highlights">
+              <div class="hero-highlight">
+                <span class="hero-highlight__icon" data-icon="gift" data-icon-size="18"></span>
+                <span>Earn Rewards as You Shop</span>
+              </div>
+              <div class="hero-highlight">
+                <span class="hero-highlight__icon" data-icon="crown" data-icon-size="18"></span>
+                <span>Exclusive Member Offers</span>
+              </div>
+              <div class="hero-highlight">
+                <span class="hero-highlight__icon" data-icon="sparkles" data-icon-size="18"></span>
+                <span>Early Access to New Collections</span>
+              </div>
+            </div>
+
+            <!-- Horizontal Digital Loyalty Card Preview -->
+            <div class="hero-loyalty-preview" aria-label="Digital loyalty card preview">
+              <div class="hero-loyalty-preview__dark">
+                <div>
+                  <div class="loyalty-card__brand" style="font-size: 1rem">BONFREE-HUB</div>
+                  <div class="loyalty-card__sub">LOYALTY CLUB</div>
+                </div>
+                <span
+                  class="hero-loyalty-preview__botanical"
+                  data-icon="leaf"
+                  data-icon-size="76"
+                ></span>
+              </div>
+              <div class="hero-loyalty-preview__right">
+                <div class="hero-loyalty-preview__heading">
+                  Your Rewards, Closer With Every Shop
+                </div>
+                <div data-stamp-grid data-stamp-total="10" data-stamp-earned="4"></div>
+                <div class="text-xs text-muted">4 / 10 Stamps Earned</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero-split__media">
+            <img
+              src="assets/images/hero-streetwear.jpg"
+              alt="Young Gen Z woman in oversized graphic tee and cargo pants alongside a young man in layered streetwear jacket and cargo trousers"
+              class="hero-split__img"
+              loading="eager"
+            />
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Loyalty Programme Introduction -->
+      <section class="section" data-reveal>
+        <div class="container intro-editorial">
+          <div class="editorial-frame">
+            <img
+              src="assets/images/streetwear-editorial.jpg"
+              alt="Young adults in contemporary boxy shirts, oversized tees, baggy denim jeans, and cargo pants walking across a concrete plaza"
+              loading="lazy"
+            />
+          </div>
+
+          <div class="stack" style="gap: 1.25rem">
+            <span class="eyebrow">LOYALTY PROGRAMME</span>
+            <h2 class="page-title">Simple Stamps. Real Streetwear Perks.</h2>
+            <p class="text-sm text-muted" style="max-width: 52ch">
+              No complicated tiers or confusing points math. Every qualifying in-store or verified
+              purchase adds a digital stamp straight to your BONFREE-HUB member pass. Collect 10
+              stamps to unlock your next ₹500 wardrobe reward.
+            </p>
+            <div class="grid grid-2">
+              <div class="card card--ivory">
+                <strong class="text-sm">1 Stamp Per Qualifying Order</strong>
+                <p class="text-xs text-muted" style="margin-top: 0.25rem">
+                  Earn 1 stamp on every eligible purchase of ₹1,000 or more across tees, shirts,
+                  denim, and cargos.
+                </p>
+              </div>
+              <div class="card card--ivory">
+                <strong class="text-sm">10 Stamps = ₹500 Voucher</strong>
+                <p class="text-xs text-muted" style="margin-top: 0.25rem">
+                  Redeem directly at store checkout using your personal member QR pass.
+                </p>
+              </div>
+            </div>
+            <div class="cluster">
+              <a href="loyalty.html#how-it-works" class="btn btn--primary">See How It Works</a>
+              <a href="about.html" class="btn btn--outline-muted">Read Our Story</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Member Benefits -->
+      <section class="section section--ivory" data-reveal>
+        <div class="container stack" style="gap: 2rem">
+          <div class="between">
+            <div class="stack" style="gap: 0.5rem">
+              <span class="eyebrow">MEMBER PRIVILEGES</span>
+              <h2 class="page-title">Built for Everyday Loyalty</h2>
+            </div>
+            <a href="register.html" class="btn btn--secondary">Become a Member</a>
+          </div>
+
+          <div class="benefits-grid">
+            <article class="benefit-card">
+              <span class="benefit-card__icon" data-icon="gift" data-icon-size="18"></span>
+              <h3 class="benefit-card__title">Shopping Rewards</h3>
+              <p class="text-sm text-muted">
+                Track every stamp transparently and unlock ₹500 store vouchers each time your
+                10-stamp card fills up.
+              </p>
+            </article>
+
+            <article class="benefit-card">
+              <span class="benefit-card__icon" data-icon="percent" data-icon-size="18"></span>
+              <h3 class="benefit-card__title">Exclusive Discounts</h3>
+              <p class="text-sm text-muted">
+                Access members-only price drops on oversized tees, boxy shirts, cargo pants, and
+                denim weekends.
+              </p>
+            </article>
+
+            <article class="benefit-card">
+              <span class="benefit-card__icon" data-icon="cake" data-icon-size="18"></span>
+              <h3 class="benefit-card__title">Birthday Offers</h3>
+              <p class="text-sm text-muted">
+                Celebrate your birthday month with bonus stamps and curated member-only style
+                privileges.
+              </p>
+            </article>
+
+            <article class="benefit-card">
+              <span class="benefit-card__icon" data-icon="sparkles" data-icon-size="18"></span>
+              <h3 class="benefit-card__title">Early Access to Drops</h3>
+              <p class="text-sm text-muted">
+                Preview limited seasonal streetwear capsules and fresh colourways before public
+                store release.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer id="site-footer"></footer>
+
+    <script type="module" src="src/scripts/main.js"></script>
+  </body>
+</html>

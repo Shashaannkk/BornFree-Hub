@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="bonfree-env" content="development" />
+    <title>BONFREE-HUB — Design System &amp; Reusable UI Components</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="src/styles/tokens.css" />
+    <link rel="stylesheet" href="src/styles/reset.css" />
+    <link rel="stylesheet" href="src/styles/layout.css" />
+    <link rel="stylesheet" href="src/styles/components.css" />
+  </head>
+  <body data-page="design-system" class="has-mobile-bottom-nav">
+    <header id="site-header"></header>
+
+    <main class="section section--ivory">
+      <div class="container stack" style="gap: 2.5rem">
+        <!-- Intro -->
+        <div class="between">
+          <div class="stack" style="gap: 0.5rem">
+            <span class="eyebrow">PHASE 1 COMPONENT LIBRARY</span>
+            <h1 class="page-title">BONFREE-HUB Design System</h1>
+            <p class="text-sm text-muted">
+              Verified monochrome tokens and reusable UI primitives for Public, Customer, and Admin
+              surfaces.
+            </p>
+          </div>
+          <a href="index.html" class="btn btn--outline-muted">Back to Foundation Home</a>
+        </div>
+
+        <!-- 1. Colors & Typography -->
+        <section class="card stack">
+          <div class="card__header">
+            <h2 class="card__title">1. Palette &amp; Typography</h2>
+            <span class="badge badge--neutral">Playfair Display + Inter</span>
+          </div>
+          <div class="grid grid-4">
+            <div class="card" style="background: #101010; color: #ffffff">
+              <strong>Primary Black</strong>
+              <div class="text-xs">#101010</div>
+            </div>
+            <div class="card" style="background: #ffffff">
+              <strong>Pure White</strong>
+              <div class="text-xs text-muted">#FFFFFF</div>
+            </div>
+            <div class="card" style="background: #f5f4f0">
+              <strong>Editorial Ivory</strong>
+              <div class="text-xs text-muted">#F5F4F0</div>
+            </div>
+            <div class="card" style="background: #d9d9d9">
+              <strong>Light Grey</strong>
+              <div class="text-xs">#D9D9D9</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. Buttons & Interactive Feedback -->
+        <section class="card stack">
+          <div class="card__header">
+            <h2 class="card__title">2. Buttons, Modals &amp; Toasts</h2>
+          </div>
+          <div class="cluster">
+            <button type="button" class="btn btn--primary">Primary Action</button>
+            <button type="button" class="btn btn--secondary">Secondary Outline</button>
+            <button type="button" class="btn btn--outline-muted">Muted Outline</button>
+            <button type="button" class="btn btn--ghost">Ghost Action</button>
+            <button type="button" class="btn btn--primary btn--sm" id="ds-open-modal-btn">
+              Open Confirm Modal
+            </button>
+            <button type="button" class="btn btn--secondary btn--sm" id="ds-toast-success-btn">
+              Trigger Toast
+            </button>
+          </div>
+        </section>
+
+        <!-- 3. Forms & Validation -->
+        <section class="grid grid-2">
+          <form class="card form-stack" id="ds-validation-form" novalidate>
+            <div class="card__header" style="margin-bottom: 0">
+              <h2 class="card__title">3. Form Controls &amp; Validation</h2>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="ds-email">
+                Email Address <span class="field__required">*</span>
+              </label>
+              <div class="input-wrap">
+                <span class="input-wrap__icon" data-icon="mail" data-icon-size="16"></span>
+                <input
+                  id="ds-email"
+                  name="email"
+                  type="email"
+                  class="input input--has-icon"
+                  placeholder="member@bonfree-hub.com"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="ds-password">
+                Password <span class="field__required">*</span>
+              </label>
+              <div class="input-wrap">
+                <span class="input-wrap__icon" data-icon="lock" data-icon-size="16"></span>
+                <input
+                  id="ds-password"
+                  name="password"
+                  type="password"
+                  class="input input--has-icon input--has-action"
+                  placeholder="Minimum 8 characters"
+                  minlength="8"
+                  required
+                />
+                <button
+                  type="button"
+                  class="input-wrap__action"
+                  data-password-toggle="ds-password"
+                  aria-label="Show password"
+                >
+                  <span data-icon="eye" data-icon-size="16"></span>
+                </button>
+              </div>
+            </div>
+
+            <div class="between">
+              <label class="checkbox">
+                <input type="checkbox" name="remember" />
+                <span>Remember session</span>
+              </label>
+              <label class="switch" aria-label="Enable Login Alerts">
+                <input type="checkbox" checked />
+                <span class="switch__track"></span>
+              </label>
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--block">Validate Form</button>
+          </form>
+
+          <!-- 4. Alerts & Loyalty Card -->
+          <div class="stack">
+            <div class="card stack">
+              <h2 class="card__title">4. Alerts &amp; Badges</h2>
+              <div class="cluster">
+                <span class="badge badge--active">Qualifying</span>
+                <span class="badge badge--inactive">Inactive</span>
+                <span class="badge badge--warning">Pending</span>
+                <span class="badge badge--danger">Not Qualifying</span>
+                <span class="badge badge--dark">VIP Member</span>
+              </div>
+              <div id="ds-alerts-demo" class="stack"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 5. Admin Shell & KPI Cards Preview -->
+        <section class="card stack">
+          <div class="card__header">
+            <h2 class="card__title">5. Admin Sidebar &amp; KPI Cards</h2>
+          </div>
+          <div class="grid grid-2" style="grid-template-columns: 248px 1fr">
+            <aside class="app-sidebar" style="border-radius: 6px; min-height: 320px">
+              <div>
+                <div class="app-sidebar__brand">
+                  <div class="brand-wordmark" style="font-size: 1.125rem">BONFREE-HUB</div>
+                  <div class="app-sidebar__subtitle">LOYALTY PLATFORM</div>
+                </div>
+                <div id="ds-admin-sidebar-demo"></div>
+              </div>
+            </aside>
+
+            <div class="stack">
+              <div class="grid grid-2">
+                <div class="kpi-card">
+                  <div class="kpi-card__top">
+                    <span data-icon="users" data-icon-size="15"></span>
+                    <span>Total Members</span>
+                  </div>
+                  <div class="kpi-card__value">12,840</div>
+                  <div class="kpi-card__delta">+8.4% vs. previous 30 days</div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-card__top">
+                    <span data-icon="gift" data-icon-size="15"></span>
+                    <span>Rewards Redeemed</span>
+                  </div>
+                  <div class="kpi-card__value">4,892</div>
+                  <div class="kpi-card__delta">+9.1% vs. previous 30 days</div>
+                </div>
+              </div>
+              <div class="loyalty-card">
+                <div>
+                  <div class="loyalty-card__brand">BONFREE-HUB</div>
+                  <div class="loyalty-card__sub">LOYALTY MEMBER</div>
+                  <div class="loyalty-card__member">
+                    <div class="loyalty-card__name">Aanya</div>
+                    <div class="loyalty-card__id">BF-001248</div>
+                  </div>
+                </div>
+                <div class="loyalty-card__qr">
+                  <span data-icon="qr-code" data-icon-size="52"></span>
+                  <span class="loyalty-card__qr-label">Scan at Checkout</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 6. Data Table & Pagination -->
+        <section class="stack">
+          <div class="between">
+            <h2 class="section-title">6. Data Table &amp; Pagination</h2>
+            <button type="button" class="btn btn--outline-muted btn--sm" id="ds-toggle-table-loading">
+              Toggle Table Skeleton
+            </button>
+          </div>
+          <div id="ds-table-demo"></div>
+        </section>
+
+        <!-- 7. Loading States -->
+        <section class="card stack">
+          <div class="card__header">
+            <h2 class="card__title">7. Loading Skeletons &amp; Region Overlay</h2>
+            <button type="button" class="btn btn--outline-muted btn--sm" id="ds-toggle-overlay-btn">
+              Toggle Region Overlay
+            </button>
+          </div>
+          <div id="ds-overlay-demo" class="stack" style="padding: 0.5rem">
+            <div id="ds-skeleton-demo"></div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Mobile Bottom Navigation Preview (Visible <= 768px) -->
+    <nav class="mobile-bottom-nav" aria-label="Member mobile navigation">
+      <div class="mobile-bottom-nav__list">
+        <a href="index.html" class="mobile-bottom-nav__item">
+          <span data-icon="home" data-icon-size="18"></span>
+          <span>Home</span>
+        </a>
+        <a href="design-system.html" class="mobile-bottom-nav__item is-active">
+          <span data-icon="tag" data-icon-size="18"></span>
+          <span>Loyalty</span>
+        </a>
+        <a href="#shop" class="mobile-bottom-nav__item">
+          <span data-icon="shopping-bag" data-icon-size="18"></span>
+          <span>Shop</span>
+        </a>
+        <a href="#account" class="mobile-bottom-nav__item">
+          <span data-icon="user" data-icon-size="18"></span>
+          <span>Account</span>
+        </a>
+      </div>
+    </nav>
+
+    <script type="module" src="src/scripts/main.js"></script>
+  </body>
+</html>

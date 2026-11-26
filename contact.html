@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Contact BONFREE-HUB — Reach our flagship store or loyalty support team for questions about orders, stamps, and member rewards."
+    />
+    <meta name="bonfree-env" content="development" />
+    <title>Contact Us — BONFREE-HUB</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="src/styles/tokens.css" />
+    <link rel="stylesheet" href="src/styles/reset.css" />
+    <link rel="stylesheet" href="src/styles/layout.css" />
+    <link rel="stylesheet" href="src/styles/components.css" />
+    <link rel="stylesheet" href="src/styles/public.css" />
+    <link rel="stylesheet" href="src/styles/auth.css" />
+  </head>
+  <body data-page="contact">
+    <header id="site-header"></header>
+
+    <main>
+      <section class="auth-split auth-split--contact">
+        <div class="auth-split__media">
+          <img
+            src="assets/images/auth-contact.jpg"
+            alt="Gen Z streetwear model seated on concrete steps wearing an oversized dark graphic tee, wide-leg cargo pants, and sneakers"
+            class="auth-split__img"
+            loading="eager"
+          />
+          <div class="auth-split__scrim" aria-hidden="true"></div>
+          <div class="auth-split__media-inner">
+            <span class="eyebrow eyebrow--inverse">GET IN TOUCH</span>
+            <h1 class="auth-split__media-title">Contact<br />Us</h1>
+            <p class="auth-split__media-copy">
+              We're here to help with your purchases, loyalty benefits, store visits and more.
+            </p>
+          </div>
+        </div>
+
+        <div class="auth-split__panel">
+          <div class="auth-panel-box auth-panel-box--wide">
+            <div class="contact-workspace">
+              <aside class="contact-info-list" aria-label="Store Contact Information">
+                <div class="contact-info-item">
+                  <span class="contact-info-item__icon" data-icon="map-pin" data-icon-size="18"></span>
+                  <div>
+                    <h2 class="contact-info-item__title">Visit Our Store</h2>
+                    <p class="contact-info-item__text">
+                      BONFREE-HUB Flagship<br />
+                      Spectrum Mall, MG Road<br />
+                      Bengaluru — 560001, India
+                    </p>
+                  </div>
+                </div>
+
+                <div class="contact-info-item">
+                  <span class="contact-info-item__icon" data-icon="phone" data-icon-size="18"></span>
+                  <div>
+                    <h2 class="contact-info-item__title">Call Us</h2>
+                    <p class="contact-info-item__text">
+                      +91 98765 43210<br />
+                      (Mon – Sun, 10:00 AM – 8:00 PM)
+                    </p>
+                  </div>
+                </div>
+
+                <div class="contact-info-item">
+                  <span class="contact-info-item__icon" data-icon="mail" data-icon-size="18"></span>
+                  <div>
+                    <h2 class="contact-info-item__title">Email Us</h2>
+                    <p class="contact-info-item__text">support@bonfree-hub.com</p>
+                  </div>
+                </div>
+              </aside>
+
+              <div class="stack" style="gap: 1rem">
+                <div class="stack" style="gap: 0.35rem">
+                  <h2 class="auth-panel-box__title">We'd Love to Hear from You</h2>
+                  <p class="auth-panel-box__subtitle">
+                    Questions about BONFREE-HUB, your loyalty rewards, or our collections? Get in
+                    touch with our team.
+                  </p>
+                </div>
+
+                <div id="form-status-region" aria-live="polite"></div>
+
+                <form id="contact-form" class="form-stack" novalidate>
+                  <div class="contact-form-grid">
+                    <div class="field">
+                      <label class="field__label" for="contact-name">
+                        Full Name <span class="field__required">*</span>
+                      </label>
+                      <input
+                        id="contact-name"
+                        name="fullName"
+                        type="text"
+                        class="input"
+                        placeholder="Full Name"
+                        autocomplete="name"
+                        required
+                      />
+                    </div>
+
+                    <div class="field">
+                      <label class="field__label" for="contact-email">
+                        Email Address <span class="field__required">*</span>
+                      </label>
+                      <input
+                        id="contact-email"
+                        name="email"
+                        type="email"
+                        class="input"
+                        placeholder="Email Address"
+                        autocomplete="email"
+                        required
+                      />
+                    </div>
+
+                    <div class="field contact-form-grid__full">
+                      <label class="field__label" for="contact-subject">
+                        Subject <span class="field__required">*</span>
+                      </label>
+                      <select id="contact-subject" name="subject" class="select" required>
+                        <option value="">Select a topic</option>
+                        <option value="Loyalty Stamps & Rewards">Loyalty Stamps &amp; Rewards</option>
+                        <option value="In-Store Purchase Record">In-Store Purchase Record</option>
+                        <option value="Collections & Drop Availability">
+                          Collections &amp; Drop Availability
+                        </option>
+                        <option value="Account & Membership Support">
+                          Account &amp; Membership Support
+                        </option>
+                      </select>
+                    </div>
+
+                    <div class="field contact-form-grid__full">
+                      <label class="field__label" for="contact-message">
+                        Your Message <span class="field__required">*</span>
+                      </label>
+                      <textarea
+                        id="contact-message"
+                        name="message"
+                        class="textarea"
+                        placeholder="Tell us how we can help..."
+                        minlength="10"
+                        required
+                      ></textarea>
+                    </div>
+                  </div>
+
+                  <button type="submit" class="btn btn--primary btn--lg btn--block">
+                    SEND MESSAGE
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer id="site-footer"></footer>
+
+    <script type="module" src="src/scripts/main.js"></script>
+  </body>
+</html>

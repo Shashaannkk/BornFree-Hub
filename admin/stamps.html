@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="BONFREE-HUB Stamp Transactions — Audit stamp earning transactions, filter by date and status, and inspect receipts."
+    />
+    <meta name="bonfree-env" content="development" />
+    <title>Stamp Transactions — BONFREE-HUB Admin Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../src/styles/tokens.css" />
+    <link rel="stylesheet" href="../src/styles/reset.css" />
+    <link rel="stylesheet" href="../src/styles/layout.css" />
+    <link rel="stylesheet" href="../src/styles/components.css" />
+    <link rel="stylesheet" href="../src/styles/auth.css" />
+    <link rel="stylesheet" href="../src/styles/admin.css" />
+  </head>
+  <body data-page="admin-stamps">
+    <div class="admin-shell">
+      <aside id="admin-sidebar-host"></aside>
+
+      <div class="admin-main">
+        <header id="admin-topbar-host"></header>
+
+        <main class="admin-content">
+          <div class="admin-page-head">
+            <div class="stack" style="gap: 0.25rem">
+              <span class="eyebrow">LEDGER AUDIT</span>
+              <h1 class="page-title">Stamp Transactions</h1>
+              <p class="text-sm text-muted">
+                View and audit all customer stamp earning and adjustment transactions.
+              </p>
+            </div>
+            <a href="scanner.html" class="btn btn--primary">Open QR Scanner</a>
+          </div>
+
+          <div class="stack" style="gap: 1.25rem">
+            <div class="stamps-toolbar" role="search" aria-label="Filter stamp transactions">
+              <input
+                id="stamps-search"
+                type="search"
+                class="input"
+                placeholder="Search TXN ID, customer, staff or reference..."
+                aria-label="Search stamp transactions"
+              />
+              <input id="stamps-date-from" type="date" class="input" aria-label="From date" />
+              <input id="stamps-date-to" type="date" class="input" aria-label="To date" />
+              <select id="stamps-status" class="select" aria-label="Filter by status">
+                <option value="all">All Status</option>
+                <option value="awarded">Awarded</option>
+                <option value="reversed">Reversed</option>
+              </select>
+              <select id="stamps-sort" class="select" aria-label="Sort transactions">
+                <option value="date-desc">Newest First</option>
+                <option value="date-asc">Oldest First</option>
+                <option value="amount-desc">Highest Amount</option>
+                <option value="stamps-desc">Most Stamps</option>
+              </select>
+              <button type="button" id="stamps-apply-btn" class="btn btn--primary">Apply</button>
+              <button type="button" id="stamps-clear-btn" class="btn btn--outline-muted">
+                Clear
+              </button>
+            </div>
+
+            <div id="admin-stamps-table"></div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="../src/scripts/adminMain.js"></script>
+  </body>
+</html>

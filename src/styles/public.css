@@ -1,0 +1,663 @@
+/* ==========================================================================
+   BONFREE-HUB Public Website Styles (Phase 1A)
+   Matches approved monochrome editorial references 01, 02, and 03.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   01. Home — Split Hero Banner (Reference 01)
+   -------------------------------------------------------------------------- */
+.hero-split {
+  position: relative;
+  background-color: var(--color-ivory);
+  border-bottom: 1px solid var(--border-default);
+  overflow: hidden;
+}
+
+.hero-split__grid {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  align-items: stretch;
+  min-height: 580px;
+}
+
+.hero-split__content {
+  position: relative;
+  z-index: 2;
+  padding-block: var(--space-12);
+  padding-right: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-5);
+}
+
+.hero-split__headline {
+  font-family: var(--font-heading);
+  font-size: clamp(2.5rem, 4.8vw, 3.75rem);
+  font-weight: 600;
+  line-height: 1.03;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: var(--color-black);
+}
+
+.hero-split__copy {
+  max-width: 50ch;
+  font-size: var(--text-sm);
+  line-height: 1.65;
+  color: var(--color-text-secondary);
+}
+
+.hero-split__highlights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  padding-top: var(--space-2);
+}
+
+.hero-highlight {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--color-text-primary);
+}
+
+.hero-highlight__icon {
+  flex-shrink: 0;
+  color: var(--color-black);
+}
+
+/* Horizontal Hero Loyalty Preview Card (Reference 01) */
+.hero-loyalty-preview {
+  display: grid;
+  grid-template-columns: 185px 1fr;
+  background-color: var(--color-white);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  max-width: 560px;
+}
+
+.hero-loyalty-preview__dark {
+  position: relative;
+  background-color: var(--color-black);
+  color: var(--color-white);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.hero-loyalty-preview__botanical {
+  position: absolute;
+  right: -8px;
+  bottom: -10px;
+  width: 78px;
+  height: 78px;
+  color: rgba(255, 255, 255, 0.22);
+  pointer-events: none;
+}
+
+.hero-loyalty-preview__right {
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-3);
+  background-color: var(--color-ivory);
+}
+
+.hero-loyalty-preview__heading {
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  line-height: 1.25;
+}
+
+.hero-split__media {
+  position: relative;
+  min-height: 520px;
+  background-color: #e9e7e1;
+  overflow: hidden;
+}
+
+.hero-split__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  filter: grayscale(100%) contrast(1.06);
+}
+
+.hero-split__media::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 120px;
+  background: linear-gradient(to right, var(--color-ivory) 0%, rgba(245, 244, 240, 0) 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   01/03. Programme Intro & Member Benefits Grid
+   -------------------------------------------------------------------------- */
+.intro-editorial {
+  display: grid;
+  grid-template-columns: 0.95fr 1.05fr;
+  gap: var(--space-10);
+  align-items: center;
+}
+
+.editorial-frame {
+  position: relative;
+  border: 1px solid var(--border-default);
+  background-color: var(--color-ivory);
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+}
+
+.editorial-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(100%) contrast(1.05);
+  transition: transform 0.5s var(--ease-standard);
+}
+
+.editorial-frame:hover img {
+  transform: scale(1.02);
+}
+
+.benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-5);
+}
+
+.benefit-card {
+  background-color: var(--color-white);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  transition: border-color var(--duration-base) var(--ease-standard),
+    transform var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard);
+}
+
+.benefit-card:hover {
+  border-color: var(--color-black);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-xs);
+}
+
+.benefit-card__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--color-ivory);
+  border: 1px solid var(--border-default);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-black);
+}
+
+.benefit-card__title {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   02. About Us — Split Store Interior & Values (Reference 02)
+   -------------------------------------------------------------------------- */
+.about-story {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: var(--space-12);
+  align-items: center;
+}
+
+.about-story__media {
+  border: 1px solid var(--border-default);
+  background-color: var(--color-ivory);
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+
+.about-story__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(100%) contrast(1.06);
+}
+
+.about-pillars {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  padding-top: var(--space-6);
+  margin-top: var(--space-4);
+  border-top: 1px solid var(--border-default);
+  text-align: center;
+}
+
+.about-pillar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.about-pillar__label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.35;
+}
+
+/* --------------------------------------------------------------------------
+   03. Loyalty Club / How It Works (Reference 03)
+   -------------------------------------------------------------------------- */
+.loyalty-hero-center {
+  text-align: center;
+  max-width: 680px;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.eyebrow--centered::before,
+.eyebrow--centered::after {
+  content: '';
+  display: inline-block;
+  width: 44px;
+  height: 1px;
+  background-color: var(--border-default);
+}
+
+.how-it-works-split {
+  display: grid;
+  grid-template-columns: 1.25fr 0.95fr;
+  gap: var(--space-10);
+  align-items: center;
+  margin-top: var(--space-10);
+}
+
+.steps-flow {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  gap: var(--space-3);
+  align-items: start;
+  padding-right: var(--space-6);
+  border-right: 1px solid var(--border-default);
+}
+
+.step-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-3);
+}
+
+.step-node__circle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background-color: var(--color-ivory);
+  border: 1px solid var(--border-default);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-black);
+}
+
+.step-node__title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.step-node__num {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--color-black);
+  color: var(--color-white);
+  font-size: 0.6875rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step-arrow {
+  padding-top: 26px;
+  color: var(--color-text-muted);
+}
+
+/* Interactive 2x5 Example Loyalty Card (Reference 03) */
+.example-card-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.example-card-panel__caption {
+  text-align: center;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.example-loyalty-card {
+  display: grid;
+  grid-template-columns: 155px 1fr;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background-color: var(--color-ivory);
+  box-shadow: var(--shadow-sm);
+}
+
+.example-loyalty-card__left {
+  position: relative;
+  background-color: var(--color-black);
+  color: var(--color-white);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+.example-loyalty-card__right {
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.stamp-grid-5x2 {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(30px, 1fr));
+  gap: var(--space-2);
+}
+
+.stamp-btn {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1.5px solid #b5b5b0;
+  background-color: var(--color-white);
+  color: var(--color-text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  transition: transform var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+}
+
+.stamp-btn:hover {
+  border-color: var(--color-black);
+  transform: scale(1.06);
+}
+
+.stamp-btn.is-earned {
+  background-color: var(--color-black);
+  border-color: var(--color-black);
+  color: var(--color-white);
+}
+
+/* Horizontal Benefits Strip (Reference 03 Bottom) */
+.benefits-strip {
+  display: grid;
+  grid-template-columns: 180px repeat(4, minmax(0, 1fr));
+  align-items: center;
+  border-top: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--border-default);
+  background-color: var(--color-white);
+  padding-block: var(--space-6);
+}
+
+.benefits-strip__title {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  line-height: 1.15;
+  text-transform: uppercase;
+  padding-right: var(--space-4);
+}
+
+.benefits-strip__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-inline: var(--space-5);
+  border-left: 1px solid var(--border-default);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+/* FAQ Accordion */
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--border-default);
+}
+
+.faq-item {
+  border-bottom: 1px solid var(--border-default);
+}
+
+.faq-item__trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-block: var(--space-5);
+  text-align: left;
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-black);
+}
+
+.faq-item__icon {
+  flex-shrink: 0;
+  transition: transform var(--duration-base) var(--ease-standard);
+}
+
+.faq-item__trigger[aria-expanded='true'] .faq-item__icon {
+  transform: rotate(180deg);
+}
+
+.faq-item__panel {
+  padding-bottom: var(--space-5);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  max-width: 72ch;
+}
+
+/* --------------------------------------------------------------------------
+   Rich Public Footer
+   -------------------------------------------------------------------------- */
+.public-footer {
+  background-color: var(--color-black);
+  color: var(--color-white);
+  padding-block: var(--space-16) var(--space-8);
+}
+
+.public-footer__grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1.2fr;
+  gap: var(--space-8);
+  padding-bottom: var(--space-10);
+  border-bottom: 1px solid var(--color-graphite);
+}
+
+.public-footer__heading {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--color-white);
+  margin-bottom: var(--space-4);
+}
+
+.public-footer__links {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-inverse-muted);
+}
+
+.public-footer__links a:hover,
+.public-footer__links button:hover {
+  color: var(--color-white);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.public-footer__bottom {
+  padding-top: var(--space-6);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--color-text-inverse-muted);
+}
+
+/* --------------------------------------------------------------------------
+   Subtle Scroll Reveal Transitions
+   -------------------------------------------------------------------------- */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 420ms var(--ease-standard), transform 420ms var(--ease-standard);
+}
+
+[data-reveal].is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .editorial-frame img,
+  .benefit-card,
+  .stamp-btn {
+    transition: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Responsive Adjustments
+   -------------------------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .hero-split__grid,
+  .intro-editorial,
+  .about-story,
+  .how-it-works-split {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-split__content {
+    padding-right: 0;
+  }
+
+  .hero-split__media {
+    min-height: 400px;
+  }
+
+  .hero-split__media::before {
+    display: none;
+  }
+
+  .steps-flow {
+    padding-right: 0;
+    border-right: 0;
+    padding-bottom: var(--space-6);
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .benefits-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .benefits-strip {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+  }
+
+  .benefits-strip__title {
+    grid-column: 1 / -1;
+  }
+
+  .benefits-strip__item {
+    border-left: 0;
+    padding-inline: 0;
+  }
+
+  .public-footer__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-split__highlights,
+  .benefits-grid,
+  .about-pillars,
+  .public-footer__grid,
+  .benefits-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-loyalty-preview,
+  .example-loyalty-card {
+    grid-template-columns: 1fr;
+  }
+
+  .steps-flow {
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+  }
+
+  .step-arrow {
+    display: none;
+  }
+}

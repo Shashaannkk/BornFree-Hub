@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="My BONFREE-HUB Customer Loyalty Dashboard — Digital membership card, QR checkout pass, stamp progress, rewards, and purchase history."
+    />
+    <meta name="bonfree-env" content="development" />
+    <title>My Loyalty Dashboard — BONFREE-HUB</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="src/styles/tokens.css" />
+    <link rel="stylesheet" href="src/styles/reset.css" />
+    <link rel="stylesheet" href="src/styles/layout.css" />
+    <link rel="stylesheet" href="src/styles/components.css" />
+    <link rel="stylesheet" href="src/styles/auth.css" />
+    <link rel="stylesheet" href="src/styles/dashboard.css" />
+  </head>
+  <body data-page="customer-dashboard" class="has-mobile-bottom-nav">
+    <!-- Top Dark Member Header (Board 03 Desktop & Mobile) -->
+    <header class="site-header site-header--dark">
+      <div class="container site-header__inner">
+        <div class="cluster">
+          <button
+            type="button"
+            id="member-mobile-menu-btn"
+            class="mobile-menu-btn"
+            aria-label="Open member menu"
+          >
+            <span data-icon="menu" data-icon-size="18"></span>
+          </button>
+          <a href="index.html" class="brand-wordmark">BONFREE-HUB</a>
+        </div>
+
+        <nav class="site-nav" aria-label="Member portal quick links">
+          <a href="index.html" class="site-nav__link">HOME</a>
+          <a href="about.html" class="site-nav__link">ABOUT</a>
+          <a href="customer-dashboard.html" class="site-nav__link" aria-current="page">LOYALTY</a>
+          <a href="loyalty.html" class="site-nav__link">HOW IT WORKS</a>
+          <a href="contact.html" class="site-nav__link">STORES</a>
+        </nav>
+
+        <div class="site-header__actions">
+          <button
+            type="button"
+            class="member-topbar__user"
+            data-member-view="profile"
+            aria-label="Open member profile"
+          >
+            <span class="member-topbar__avatar" aria-hidden="true">A</span>
+            <span>Aanya</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Mobile Member Drawer -->
+    <div id="member-drawer-backdrop" class="nav-drawer-backdrop" aria-hidden="true"></div>
+    <aside
+      id="member-mobile-drawer"
+      class="nav-drawer"
+      role="dialog"
+      aria-label="Member Portal Navigation"
+    >
+      <div class="between">
+        <span class="brand-wordmark">BONFREE-HUB</span>
+        <button
+          type="button"
+          id="member-drawer-close"
+          class="btn btn--icon btn--outline-muted"
+          aria-label="Close member menu"
+        >
+          <span data-icon="x" data-icon-size="18"></span>
+        </button>
+      </div>
+      <nav class="stack" aria-label="Member sections">
+        <button type="button" class="sidebar-nav__item is-active" data-member-view="dashboard">
+          <span data-icon="home" data-icon-size="17"></span>
+          <span>Dashboard</span>
+        </button>
+        <button type="button" class="sidebar-nav__item" data-member-view="rewards">
+          <span data-icon="gift" data-icon-size="17"></span>
+          <span>My Rewards</span>
+        </button>
+        <button type="button" class="sidebar-nav__item" data-member-view="stamps">
+          <span data-icon="stamp" data-icon-size="17"></span>
+          <span>Stamp Activity</span>
+        </button>
+        <button type="button" class="sidebar-nav__item" data-member-view="purchases">
+          <span data-icon="shopping-bag" data-icon-size="17"></span>
+          <span>Purchase History</span>
+        </button>
+        <button type="button" class="sidebar-nav__item" data-member-view="profile">
+          <span data-icon="user" data-icon-size="17"></span>
+          <span>My Profile</span>
+        </button>
+        <button type="button" class="sidebar-nav__item" data-member-view="preferences">
+          <span data-icon="sliders" data-icon-size="17"></span>
+          <span>Preferences</span>
+        </button>
+      </nav>
+      <div style="margin-top: auto">
+        <button
+          type="button"
+          id="member-drawer-signout"
+          class="btn btn--outline-muted btn--block"
+        >
+          <span data-icon="log-out" data-icon-size="16"></span>
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Welcome Hero Banner (Board 03) -->
+    <section class="member-banner">
+      <div class="container member-banner__grid">
+        <div class="member-banner__content">
+          <span class="eyebrow">MY BONFREE-HUB</span>
+          <h1 class="member-banner__title">Welcome back, <em>Aanya</em></h1>
+          <div class="cluster">
+            <div class="member-id-pill">
+              <span>Membership ID:</span>
+              <strong>BF-001248</strong>
+              <button
+                type="button"
+                id="copy-member-id-btn"
+                class="btn btn--icon btn--outline-muted btn--sm"
+                aria-label="Copy Membership ID BF-001248"
+              >
+                <span data-icon="copy" data-icon-size="14"></span>
+              </button>
+            </div>
+            <span class="badge badge--neutral">Development Preview Data (Read-Only)</span>
+          </div>
+          <p class="text-sm text-muted" style="max-width: 52ch">
+            Your hub for contemporary Gen Z streetwear and casual ready-to-wear for young men and
+            women.
+          </p>
+        </div>
+
+        <div class="member-banner__media">
+          <img
+            src="assets/images/member-banner.jpg"
+            alt="BONFREE-HUB loyalty member in oversized black graphic tee, headphones, and baggy denim cargo jeans"
+            class="member-banner__img"
+            loading="eager"
+          />
+        </div>
+      </div>
+    </section>
+
+    <!-- Phase 1C UI State Verification Bar (Loading / Empty / Error / Ready) -->
+    <div class="dev-state-bar">
+      <div class="container between" style="flex-wrap: wrap">
+        <span class="text-xs text-muted">
+          <strong>Phase 1C Preview:</strong> Sample read-only member ledger shown until Phase 2
+          Supabase connection.
+        </span>
+        <div class="segmented" role="group" aria-label="Preview dashboard UI states">
+          <button type="button" class="segmented__btn is-active" data-preview-state="ready">
+            Live Preview
+          </button>
+          <button type="button" class="segmented__btn" data-preview-state="loading">
+            Loading
+          </button>
+          <button type="button" class="segmented__btn" data-preview-state="empty">
+            Empty
+          </button>
+          <button type="button" class="segmented__btn" data-preview-state="error">
+            Error
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Member Workspace -->
+    <main class="member-workspace">
+      <div class="container member-shell">
+        <!-- Desktop Left Sidebar (Board 03) -->
+        <aside class="member-sidebar" aria-label="Customer Navigation">
+          <div id="member-sidebar-nav"></div>
+          <div class="member-sidebar__divider"></div>
+          <button type="button" id="member-signout-btn" class="sidebar-nav__item">
+            <span data-icon="log-out" data-icon-size="17"></span>
+            <span>Sign Out</span>
+          </button>
+        </aside>
+
+        <!-- Active Customer Portal View -->
+        <section id="member-view-host" class="stack" style="gap: 1.5rem" aria-live="polite"></section>
+      </div>
+    </main>
+
+    <!-- Mobile Bottom Navigation (Board 03 Mobile 1 & 2) -->
+    <nav class="mobile-bottom-nav" aria-label="Mobile customer navigation">
+      <div class="mobile-bottom-nav__list">
+        <button type="button" class="mobile-bottom-nav__item is-active" data-member-view="dashboard">
+          <span data-icon="home" data-icon-size="18"></span>
+          <span>Home</span>
+        </button>
+        <button type="button" class="mobile-bottom-nav__item" data-member-view="rewards">
+          <span data-icon="gift" data-icon-size="18"></span>
+          <span>Rewards</span>
+        </button>
+        <button type="button" class="mobile-bottom-nav__item" data-member-view="purchases">
+          <span data-icon="shopping-bag" data-icon-size="18"></span>
+          <span>Purchases</span>
+        </button>
+        <button type="button" class="mobile-bottom-nav__item" data-member-view="profile">
+          <span data-icon="user" data-icon-size="18"></span>
+          <span>Account</span>
+        </button>
+      </div>
+    </nav>
+
+    <script type="module" src="src/scripts/main.js"></script>
+  </body>
+</html>

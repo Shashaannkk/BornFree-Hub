@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="BONFREE-HUB Staff Management — Manage store associates, managers, back-office admins, roles, and activity logs."
+    />
+    <meta name="bonfree-env" content="development" />
+    <title>Staff Management — BONFREE-HUB Admin Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../src/styles/tokens.css" />
+    <link rel="stylesheet" href="../src/styles/reset.css" />
+    <link rel="stylesheet" href="../src/styles/layout.css" />
+    <link rel="stylesheet" href="../src/styles/components.css" />
+    <link rel="stylesheet" href="../src/styles/auth.css" />
+    <link rel="stylesheet" href="../src/styles/admin.css" />
+  </head>
+  <body data-page="admin-staff">
+    <div class="admin-shell">
+      <aside id="admin-sidebar-host"></aside>
+
+      <div class="admin-main">
+        <header id="admin-topbar-host"></header>
+
+        <main class="admin-content">
+          <div class="admin-page-head">
+            <div class="stack" style="gap: 0.25rem">
+              <span class="eyebrow">TEAM &amp; ACCESS CONTROL</span>
+              <h1 class="page-title">Staff Management</h1>
+              <p class="text-sm text-muted">
+                Manage store and back-office staff, their RBAC roles, permissions, and activity
+                logs.
+              </p>
+            </div>
+            <button type="button" id="add-staff-btn" class="btn btn--primary">+ Add Staff</button>
+          </div>
+
+          <div class="stack" style="gap: 1.25rem">
+            <div id="staff-tabs" class="tabs" role="tablist" aria-label="Staff views"></div>
+            <div id="staff-tab-panel" class="stack" style="gap: 1.25rem"></div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="../src/scripts/adminMain.js"></script>
+  </body>
+</html>

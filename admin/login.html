@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="BONFREE-HUB Admin Portal — Secure staff and administrator sign in."
+    />
+    <meta name="bonfree-env" content="development" />
+    <title>Staff Sign In — BONFREE-HUB Admin Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../src/styles/tokens.css" />
+    <link rel="stylesheet" href="../src/styles/reset.css" />
+    <link rel="stylesheet" href="../src/styles/layout.css" />
+    <link rel="stylesheet" href="../src/styles/components.css" />
+    <link rel="stylesheet" href="../src/styles/auth.css" />
+    <link rel="stylesheet" href="../src/styles/admin.css" />
+  </head>
+  <body data-page="admin-login">
+    <main class="admin-login-split">
+      <!-- Left Dark Brand Panel (Reference: Admin Login) -->
+      <section class="admin-login-split__brand">
+        <div class="admin-login-split__copy">
+          <a href="../index.html" class="brand-wordmark" style="font-size: 1.5rem">BONFREE-HUB</a>
+          <div class="admin-login-split__rule" aria-hidden="true"></div>
+          <h1 class="admin-login-split__tagline">
+            Modern<br />Streetwear &amp;<br />Everyday<br />Fashion
+          </h1>
+          <div class="admin-login-split__meta">CUSTOMER LOYALTY · STAMPS · REWARDS</div>
+        </div>
+
+        <div class="admin-login-split__photo">
+          <img
+            src="../assets/images/admin-login.jpg"
+            alt="Two Gen Z streetwear models wearing sunglasses, oversized hoodie, baseball cap, and open zip jacket"
+            loading="eager"
+          />
+        </div>
+      </section>
+
+      <!-- Right Staff Sign In Panel -->
+      <section class="admin-login-split__panel">
+        <div class="auth-panel-box">
+          <div class="stack" style="gap: 0.4rem">
+            <span class="eyebrow">ADMIN PORTAL</span>
+            <h2 class="auth-panel-box__title">Staff Sign In</h2>
+            <p class="auth-panel-box__subtitle">Secure access to BONFREE-HUB admin</p>
+          </div>
+
+          <div id="admin-login-status" aria-live="polite"></div>
+
+          <form id="admin-login-form" class="form-stack" novalidate>
+            <div class="field">
+              <label class="field__label" for="admin-email">Email Address</label>
+              <div class="input-wrap">
+                <span class="input-wrap__icon" data-icon="mail" data-icon-size="16"></span>
+                <input
+                  id="admin-email"
+                  name="email"
+                  type="email"
+                  class="input input--has-icon"
+                  placeholder="Enter your work email"
+                  autocomplete="email"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="admin-password">Password</label>
+              <div class="input-wrap">
+                <span class="input-wrap__icon" data-icon="lock" data-icon-size="16"></span>
+                <input
+                  id="admin-password"
+                  name="password"
+                  type="password"
+                  class="input input--has-icon input--has-action"
+                  placeholder="Enter password"
+                  autocomplete="current-password"
+                  required
+                />
+                <button
+                  type="button"
+                  class="input-wrap__action"
+                  data-password-toggle="admin-password"
+                  aria-label="Show password"
+                >
+                  <span data-icon="eye" data-icon-size="16"></span>
+                </button>
+              </div>
+            </div>
+
+            <div class="auth-inline-row">
+              <label class="checkbox">
+                <input type="checkbox" name="remember" />
+                <span>Remember me</span>
+              </label>
+              <a href="#forgot" id="admin-forgot-link" class="auth-link">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--lg btn--block">Sign In</button>
+          </form>
+
+          <div class="between" style="padding-top: 0.75rem; border-top: 1px solid var(--border-subtle)">
+            <a href="../index.html" class="text-xs text-muted">← Return to Public Site</a>
+            <a href="dashboard.html" class="auth-link">Preview Admin Console →</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="../src/scripts/adminMain.js"></script>
+  </body>
+</html>
